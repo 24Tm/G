@@ -71,8 +71,8 @@
         }
         button.edit-btn {
             background: #d97706;
-            padding: 4px 8px;
-            font-size: 0.75rem;
+            padding: 3px 6px;
+            font-size: 0.7rem;
         }
         button.edit-btn:hover {
             background: #b45309;
@@ -80,11 +80,11 @@
         .section-title {
             background: #334155;
             color: #38bdf8;
-            padding: 8px 12px;
+            padding: 6px 10px;
             font-weight: bold;
-            margin-top: 15px;
+            margin-top: 10px;
             border-radius: 6px 6px 0 0;
-            font-size: 1rem;
+            font-size: 0.9rem;
             border-bottom: 2px solid #2563eb;
         }
         .table-responsive {
@@ -95,13 +95,13 @@
             width: 100%;
             border-collapse: collapse;
             background: #1e293b;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border-radius: 0 0 6px 6px;
             overflow: hidden;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         th, td {
-            padding: 10px;
+            padding: 6px 8px;
             text-align: right;
             border-bottom: 1px solid #334155;
         }
@@ -167,31 +167,57 @@
             justify-content: flex-end;
         }
         
+        /* إعدادات الطباعة لتظهر في صفحة واحدة A4 تماماً */
         @media print {
+            @page {
+                size: A4;
+                margin: 5mm;
+            }
             body {
                 background: white !important;
                 color: black !important;
-                padding: 0;
+                padding: 0 !important;
+                font-size: 8pt !important;
             }
             header, .exclusion-box, .controls, .edit-col {
                 display: none !important;
             }
-            table {
-                background: white !important;
-                color: black !important;
-                border: 1px solid #ddd;
+            .container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
-            th, td {
-                border-bottom: 1px solid #ddd;
-                color: black !important;
-            }
-            th {
-                background: #f1f5f9 !important;
+            #content-area {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
             }
             .section-title {
                 background: #e2e8f0 !important;
                 color: black !important;
-                border-bottom: 2px solid #000;
+                border-bottom: 1px solid #000;
+                padding: 3px 6px !important;
+                font-size: 8.5pt !important;
+                margin-top: 4px !important;
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+            table {
+                background: white !important;
+                color: black !important;
+                border: 1px solid #ccc;
+                margin-bottom: 4px !important;
+                font-size: 8pt !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            th, td {
+                padding: 3px 5px !important;
+                border-bottom: 1px solid #ccc !important;
+                color: black !important;
+            }
+            th {
+                background: #f1f5f9 !important;
             }
         }
     </style>
@@ -326,7 +352,6 @@
             } else if (type === 'group2' || type === 'group3' || type === 'group4') {
                 let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
                 
-                // تجميع الموظفين حسب الوظيفة لضمان التنوع العادل
                 const roleGroups = {};
                 activeStaff.forEach(person => {
                     let key = person.role;
@@ -336,10 +361,8 @@
 
                 let groupsArray = Array.from({ length: numGroups }, () => []);
                 
-                // توزيع دوري ذكي لضمان التقارب العددي الشديد (فرق لا يتجاوز 1 كحد أقصى)
                 for (let role in roleGroups) {
                     let members = roleGroups[role];
-                    // ترتيب تصاعدي للمجموعات حسب الأقل أفراداً حالياً
                     members.forEach(member => {
                         groupsArray.sort((a, b) => a.length - b.length);
                         groupsArray[0].push(member);
@@ -382,7 +405,7 @@
                                 <th>الرتبة</th>
                                 <th>التكليف</th>
                                 <th>الملاحظات</th>
-                                <th class="edit-col" style="width: 80px;">إجراء</th>
+                                <th class="edit-col" style="width: 70px;">إجراء</th>
                             </tr>
                         </thead>
                         <tbody>
