@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة وتوزيع منسوبي الإدارة</title>
+    <!-- استيراد مكتبات Firebase Realtime Database للتزامن السحابي -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <style>
         * {
             box-sizing: border-box;
@@ -110,7 +114,6 @@
             margin-bottom: 15px;
         }
         
-        /* تنسيق خاص للطباعة */
         @media print {
             body {
                 background: white !important;
@@ -138,7 +141,6 @@
                 border-bottom: 2px solid #000;
             }
         }
-
         body {
             -webkit-user-select: none;
             user-select: none;
@@ -152,29 +154,30 @@
             <h1>📁 نظام هيكلة وتوزيع منسوبي الإدارة</h1>
             <div class="controls">
                 <button onclick="renderStructure('default')">الهيكلة الأصلية</button>
-                <button class="secondary" onclick="renderStructure('group2')">مجموعتان (حسب الوظيفة)</button>
-                <button class="warning" onclick="renderStructure('group3')">3 مجموعات (حسب الوظيفة)</button>
-                <button onclick="renderStructure('group4')">4 مجموعات (حسب الوظيفة)</button>
+                <button class="secondary" onclick="renderStructure('group2')">مجموعتان</button>
+                <button class="warning" onclick="renderStructure('group3')">3 مجموعات</button>
+                <button onclick="renderStructure('group4')">4 مجموعات</button>
                 <button class="secondary" onclick="renderStructure('activeOnly')">العاملون بالداخل</button>
-                <button class="print-btn" onclick="window.print()">🖨️ طباعة / PDF</button>
+                <button class="print-btn" onclick="window.print()">🖨 طباعة / PDF</button>
             </div>
         </header>
 
-        <!-- قائمة التحكم بالاستبعاد اليدوي -->
         <div class="exclusion-box">
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">إلغاء التحديد أدناه يستبعد الشخص تماماً من أي تقسيم آلي:</p>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">إلغاء التحديد أدناه يستبعد الشخص تماماً من التقسيم الآلي:</p>
             <div id="exclusion-list" style="display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto;">
                 <!-- يُعبأ تلقائياً -->
             </div>
         </div>
 
-        <div id="content-area">
-            <!-- الجداول -->
-        </div>
+        <div id="content-area"></div>
     </div>
 
     <script>
-        const staff = [
+        // ==========================================
+        // 📌 قاعدة بيانات الأسماء، الرتب، والوظائف
+        // يمكنك تعديل الاسم (name)، الرتبة (rank)، التكليف (role)، أو القسم (category) هنا بكل حرية:
+        // ==========================================
+        const defaultStaff = [
             { id: 1, name: "عبدالرحمن عبدالله الشمراني", rank: "رئيس رقباء", role: "رقيب الإدارة", category: "رقيب الإدارة", notes: "رقيب الادارة" },
             { id: 2, name: "عبدالرحمن سعود البواردي", rank: "رقيب اول", role: "مساعد الرقيب", category: "رقيب الإدارة", notes: "مساعد" },
             { id: 3, name: "عبدالرحمن خالد الحمود", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط" },
@@ -203,18 +206,57 @@
             { id: 26, name: "عبدالله سحمان السبيعي", rank: "رئيس رقباء", role: "راحة", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" }
         ];
 
+        // إعدادات الاتصال السحابي (اختياري للتزامن بين الأجهزة)
+        const firebaseConfig = {
+            databaseURL: "" 
+        };
+
         let currentMode = 'default';
+        let db = null;
+
+        try {
+            if(firebaseConfig.databaseURL !== "") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+            }
+        } catch (e) {
+            console.log("وضع العمل المحلي");
+        }
 
         function initExclusionCheckboxes() {
             const listDiv = document.getElementById('exclusion-list');
             listDiv.innerHTML = '';
-            staff.forEach(p => {
+            defaultStaff.forEach(p => {
                 listDiv.innerHTML += `
                     <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer;">
-                        <input type="checkbox" value="${p.id}" checked onchange="renderStructure(currentMode)"> ${p.name.split(' ')[0]} ${p.name.split(' ')[1]}
+                        <input type="checkbox" id="chk_${p.id}" value="${p.id}" checked onchange="updateExclusions()"> ${p.name.split(' ')[0]} ${p.name.split(' ')[1]}
                     </label>
                 `;
             });
+
+            if (db) {
+                db.ref('exclusions').on('value', (snapshot) => {
+                    const excludedIds = snapshot.val() || [];
+                    defaultStaff.forEach(p => {
+                        const chk = document.getElementById(`chk_${p.id}`);
+                        if (chk) chk.checked = !excludedIds.includes(p.id);
+                    });
+                    renderStructure(currentMode);
+                });
+            }
+        }
+
+        function updateExclusions() {
+            const checkboxes = document.querySelectorAll('#exclusion-list input[type="checkbox"]');
+            const excludedIds = Array.from(checkboxes)
+                .filter(cb => !cb.checked)
+                .map(cb => parseInt(cb.value));
+
+            if (db) {
+                db.ref('exclusions').set(excludedIds);
+            } else {
+                renderStructure(currentMode);
+            }
         }
 
         function getActiveStaff() {
@@ -223,7 +265,7 @@
                 .filter(cb => !cb.checked)
                 .map(cb => parseInt(cb.value));
             
-            return staff.filter(p => !excludedIds.includes(p.id));
+            return defaultStaff.filter(p => !excludedIds.includes(p.id));
         }
 
         function renderStructure(type) {
@@ -246,28 +288,21 @@
                 container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered);
             } else if (type === 'group2' || type === 'group3' || type === 'group4') {
                 let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
-                
-                // تجميع الموظفين حسب نوع الوظيفة (Role / Category) لضمان التوزيع العادل لكل مهام
                 const roleGroups = {};
                 activeStaff.forEach(person => {
-                    let key = person.role; // الاعتماد على الوظيفة/التكليف الدقيق
+                    let key = person.role;
                     if (!roleGroups[key]) roleGroups[key] = [];
                     roleGroups[key].push(person);
                 });
 
-                // تهيئة المجموعات الفارغة
                 let groupsArray = Array.from({ length: numGroups }, () => []);
-
-                // توزيع كل وظيفة بالتساوي على المجموعات
                 for (let role in roleGroups) {
                     let members = roleGroups[role];
                     members.forEach((member, index) => {
-                        let targetGroupIndex = index % numGroups;
-                        groupsArray[targetGroupIndex].push(member);
+                        groupsArray[index % numGroups].push(member);
                     });
                 }
 
-                // عرض المجموعات الناتجة
                 groupsArray.forEach((groupMembers, index) => {
                     container.innerHTML += createTableHTML(`المجموعة (${index + 1}) - موزعة حسب الوظائف`, groupMembers);
                 });
