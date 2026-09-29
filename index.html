@@ -72,6 +72,14 @@
         button.print-btn:hover {
             background: #6d28d9;
         }
+        button.edit-btn {
+            background: #d97706;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+        button.edit-btn:hover {
+            background: #b45309;
+        }
         .section-title {
             background: #334155;
             color: #38bdf8;
@@ -113,6 +121,54 @@
             border-radius: 6px; 
             margin-bottom: 15px;
         }
+
+        /* نافذة التعديل المنبثقة */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .modal-content h3 {
+            color: #38bdf8;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: #cbd5e1;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            justify-content: flex-end;
+        }
         
         @media print {
             body {
@@ -120,7 +176,7 @@
                 color: black !important;
                 padding: 0;
             }
-            header, .exclusion-box, .controls {
+            header, .exclusion-box, .controls, .edit-col {
                 display: none !important;
             }
             table {
@@ -141,10 +197,6 @@
                 border-bottom: 2px solid #000;
             }
         }
-        body {
-            -webkit-user-select: none;
-            user-select: none;
-        }
     </style>
 </head>
 <body>
@@ -163,7 +215,7 @@
         </header>
 
         <div class="exclusion-box">
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">إلغاء التحديد أدناه يستبعد الشخص تماماً من التقسيم الآلي:</p>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">التحكم بالاستبعاد (تم استبعاد غير العاملين بالإدارة افتراضياً):</p>
             <div id="exclusion-list" style="display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto;">
                 <!-- يُعبأ تلقائياً -->
             </div>
@@ -172,12 +224,39 @@
         <div id="content-area"></div>
     </div>
 
+    <!-- نافذة تعديل موظف -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>تعديل بيانات المنسوب</h3>
+            <input type="hidden" id="editId">
+            <div class="form-group">
+                <label>الاسم:</label>
+                <input type="text" id="editName">
+            </div>
+            <div class="form-group">
+                <label>الرتبة:</label>
+                <input type="text" id="editRank">
+            </div>
+            <div class="form-group">
+                <label>التكليف / الوظيفة:</label>
+                <input type="text" id="editRole">
+            </div>
+            <div class="form-group">
+                <label>الملاحظات / القسم:</label>
+                <input type="text" id="editNotes">
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeModal()" style="background: #475569;">إلغاء</button>
+                <button onclick="saveStaffChanges()" class="secondary">حفظ التعديل</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
-        // 📌 قاعدة بيانات الأسماء، الرتب، والوظائف
-        // يمكنك تعديل الاسم (name)، الرتبة (rank)، التكليف (role)، أو القسم (category) هنا بكل حرية:
+        // 📌 قاعدة البيانات (الأسماء، الرتب، الوظائف)
         // ==========================================
-        const defaultStaff = [
+        let staffData = [
             { id: 1, name: "عبدالرحمن عبدالله الشمراني", rank: "رئيس رقباء", role: "رقيب الإدارة", category: "رقيب الإدارة", notes: "رقيب الادارة" },
             { id: 2, name: "عبدالرحمن سعود البواردي", rank: "رقيب اول", role: "مساعد الرقيب", category: "رقيب الإدارة", notes: "مساعد" },
             { id: 3, name: "عبدالرحمن خالد الحمود", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط" },
@@ -206,66 +285,27 @@
             { id: 26, name: "عبدالله سحمان السبيعي", rank: "رئيس رقباء", role: "راحة", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" }
         ];
 
-        // إعدادات الاتصال السحابي (اختياري للتزامن بين الأجهزة)
-        const firebaseConfig = {
-            databaseURL: "" 
-        };
-
         let currentMode = 'default';
-        let db = null;
-
-        try {
-            if(firebaseConfig.databaseURL !== "") {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.database();
-            }
-        } catch (e) {
-            console.log("وضع العمل المحلي");
-        }
 
         function initExclusionCheckboxes() {
             const listDiv = document.getElementById('exclusion-list');
             listDiv.innerHTML = '';
-            defaultStaff.forEach(p => {
+            staffData.forEach(p => {
+                // استبعاد غير العاملين افتراضياً بناءً على الملاحظات أو الفئة
+                let isChecked = !p.notes.includes("لا يعمل") && p.category !== "لا يقومون بأي اعمال داخل الادارة";
                 listDiv.innerHTML += `
                     <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer;">
-                        <input type="checkbox" id="chk_${p.id}" value="${p.id}" checked onchange="updateExclusions()"> ${p.name.split(' ')[0]} ${p.name.split(' ')[1]}
+                        <input type="checkbox" id="chk_${p.id}" value="${p.id}" ${isChecked ? 'checked' : ''} onchange="renderStructure(currentMode)"> ${p.name.split(' ')[0]} ${p.name.split(' ')[1]}
                     </label>
                 `;
             });
-
-            if (db) {
-                db.ref('exclusions').on('value', (snapshot) => {
-                    const excludedIds = snapshot.val() || [];
-                    defaultStaff.forEach(p => {
-                        const chk = document.getElementById(`chk_${p.id}`);
-                        if (chk) chk.checked = !excludedIds.includes(p.id);
-                    });
-                    renderStructure(currentMode);
-                });
-            }
-        }
-
-        function updateExclusions() {
-            const checkboxes = document.querySelectorAll('#exclusion-list input[type="checkbox"]');
-            const excludedIds = Array.from(checkboxes)
-                .filter(cb => !cb.checked)
-                .map(cb => parseInt(cb.value));
-
-            if (db) {
-                db.ref('exclusions').set(excludedIds);
-            } else {
-                renderStructure(currentMode);
-            }
         }
 
         function getActiveStaff() {
-            const checkboxes = document.querySelectorAll('#exclusion-list input[type="checkbox"]');
-            const excludedIds = Array.from(checkboxes)
-                .filter(cb => !cb.checked)
-                .map(cb => parseInt(cb.value));
-            
-            return defaultStaff.filter(p => !excludedIds.includes(p.id));
+            return staffData.filter(p => {
+                const chk = document.getElementById(`chk_${p.id}`);
+                return chk && chk.checked;
+            });
         }
 
         function renderStructure(type) {
@@ -277,14 +317,15 @@
             if (type === 'default') {
                 const groups = {};
                 activeStaff.forEach(person => {
-                    if (!groups[person.category]) groups[person.category] = [];
-                    groups[person.category].push(person);
+                    let cat = person.category;
+                    if (!groups[cat]) groups[cat] = [];
+                    groups[cat].push(person);
                 });
                 for (let cat in groups) {
                     container.innerHTML += createTableHTML(cat, groups[cat]);
                 }
             } else if (type === 'activeOnly') {
-                const filtered = activeStaff.filter(p => p.category !== "لا يقومون بأي اعمال داخل الادارة");
+                const filtered = activeStaff.filter(p => p.category !== "لا يقومون بأي اعمال داخل الادارة" && !p.notes.includes("لا يعمل"));
                 container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered);
             } else if (type === 'group2' || type === 'group3' || type === 'group4') {
                 let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
@@ -319,12 +360,13 @@
                         <td>${p.rank}</td>
                         <td>${p.role}</td>
                         <td>${p.notes}</td>
+                        <td class="edit-col"><button class="edit-btn" onclick="openEditModal(${p.id})">✏️ تعديل</button></td>
                     </tr>
                 `;
             });
 
             if (list.length === 0) {
-                rows = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
+                rows = `<tr><td colspan="6" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
             }
 
             return `
@@ -338,6 +380,7 @@
                                 <th>الرتبة</th>
                                 <th>التكليف</th>
                                 <th>الملاحظات</th>
+                                <th class="edit-col" style="width: 80px;">إجراء</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -348,12 +391,39 @@
             `;
         }
 
+        function openEditModal(id) {
+            const person = staffData.find(p => p.id === id);
+            if (!person) return;
+            document.getElementById('editId').value = person.id;
+            document.getElementById('editName').value = person.name;
+            document.getElementById('editRank').value = person.rank;
+            document.getElementById('editRole').value = person.role;
+            document.getElementById('editNotes').value = person.notes;
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function saveStaffChanges() {
+            const id = parseInt(document.getElementById('editId').value);
+            const person = staffData.find(p => p.id === id);
+            if (person) {
+                person.name = document.getElementById('editName').value;
+                person.rank = document.getElementById('editRank').value;
+                person.role = document.getElementById('editRole').value;
+                person.notes = document.getElementById('editNotes').value;
+            }
+            closeModal();
+            initExclusionCheckboxes();
+            renderStructure(currentMode);
+        }
+
         window.onload = () => {
             initExclusionCheckboxes();
             renderStructure('default');
         };
-
-        document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
 </html>
