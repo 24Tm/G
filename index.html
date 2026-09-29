@@ -4,52 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة وتوزيع منسوبي الإدارة</title>
-    <!-- استيراد خط كوفي أو خط عربي مريح -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Cairo', sans-serif;
+            font-family: Arial, sans-serif;
         }
         body {
             background-color: #0f172a;
             color: #f8fafc;
-            padding: 20px;
+            padding: 15px;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
         }
         header {
             background: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            text-align: center;
         }
         h1 {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: #38bdf8;
+            margin-bottom: 12px;
         }
         .controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
+            justify-content: center;
         }
         button {
             background: #2563eb;
             color: white;
             border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: 0.2s;
         }
         button:hover {
             background: #1d4ed8;
@@ -60,37 +59,60 @@
         button.secondary:hover {
             background: #047857;
         }
-        .section-title {
+        button.warning {
             background: #d97706;
-            color: white;
-            padding: 10px 15px;
-            font-weight: 700;
-            margin-top: 20px;
+        }
+        .section-title {
+            background: #334155;
+            color: #38bdf8;
+            padding: 8px 12px;
+            font-weight: bold;
+            margin-top: 15px;
             border-radius: 6px 6px 0 0;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            border-bottom: 2px solid #2563eb;
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             background: #1e293b;
-            margin-bottom: 20px;
-            border-radius: 0 0 8px 8px;
+            margin-bottom: 15px;
+            border-radius: 0 0 6px 6px;
             overflow: hidden;
+            font-size: 0.9rem;
         }
         th, td {
-            padding: 12px 15px;
+            padding: 10px;
             text-align: right;
             border-bottom: 1px solid #334155;
-            font-size: 0.95rem;
         }
         th {
-            background: #334155;
-            color: #e2e8f0;
+            background: #1e293b;
+            color: #cbd5e1;
         }
         tr:hover {
             background: #273548;
         }
-        /* حماية ضد تصوير الشاشة وتحديد النصوص */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1e293b;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            justify-content: space-between;
+        }
+        input[type="checkbox"] {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        /* منع تحديد النصوص وحماية الشاشة */
         body {
             -webkit-user-select: none;
             user-select: none;
@@ -103,19 +125,28 @@
         <header>
             <h1>📁 نظام هيكلة وتوزيع منسوبي الإدارة</h1>
             <div class="controls">
-                <button onclick="renderStructure('default')">الهيكلة الإدارية الأصلية</button>
-                <button class="secondary" onclick="renderStructure('group2')">تقسيم إلى مجموعتين</button>
-                <button onclick="renderStructure('group3')">تقسيم إلى 3 مجموعات</button>
+                <button onclick="renderStructure('default')">الهيكلة الأصلية</button>
+                <button class="secondary" onclick="renderStructure('group2')">مجموعتان</button>
+                <button class="warning" onclick="renderStructure('group3')">3 مجموعات</button>
+                <button onclick="renderStructure('group4')">4 مجموعات</button>
+                <button class="secondary" onclick="renderStructure('activeOnly')">العاملون بالداخل فقط</button>
             </div>
         </header>
 
+        <!-- قائمة التحكم بالاستبعاد اليدوي -->
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">إلغاء التحديد أدناه يستبعد الشخص تماماً من أي تقسيم آلي:</p>
+            <div id="exclusion-list" style="display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto;">
+                <!-- يُعبأ تلقائياً -->
+            </div>
+        </div>
+
         <div id="content-area">
-            <!-- سيتم تعبئة الجداول هنا برمجياً -->
+            <!-- الجداول -->
         </div>
     </div>
 
     <script>
-        // قاعدة بيانات المنسوبين المستوحاة من صورتك التنظيمية
         const staff = [
             { id: 1, name: "عبدالرحمن عبدالله الشمراني", rank: "رئيس رقباء", role: "رقيب الإدارة", category: "رقيب الإدارة", notes: "رقيب الادارة" },
             { id: 2, name: "عبدالرحمن سعود البواردي", rank: "رقيب اول", role: "مساعد الرقيب", category: "رقيب الإدارة", notes: "مساعد" },
@@ -145,37 +176,56 @@
             { id: 26, name: "عبدالله سحمان السبيعي", rank: "رئيس رقباء", role: "راحة", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" }
         ];
 
+        let currentMode = 'default';
+
+        function initExclusionCheckboxes() {
+            const listDiv = document.getElementById('exclusion-list');
+            listDiv.innerHTML = '';
+            staff.forEach(p => {
+                listDiv.innerHTML += `
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer;">
+                        <input type="checkbox" value="${p.id}" checked onchange="renderStructure(currentMode)"> ${p.name.split(' ')[0]} ${p.name.split(' ')[1]}
+                    </label>
+                `;
+            });
+        }
+
+        function getActiveStaff() {
+            const checkboxes = document.querySelectorAll('#exclusion-list input[type="checkbox"]');
+            const excludedIds = Array.from(checkboxes)
+                .filter(cb => !cb.checked)
+                .map(cb => parseInt(cb.value));
+            
+            return staff.filter(p => !excludedIds.includes(p.id));
+        }
+
         function renderStructure(type) {
+            currentMode = type;
             const container = document.getElementById('content-area');
             container.innerHTML = '';
+            const activeStaff = getActiveStaff();
 
             if (type === 'default') {
-                // التوزيع الأصلي حسب الأقسام
                 const groups = {};
-                staff.forEach(person => {
+                activeStaff.forEach(person => {
                     if (!groups[person.category]) groups[person.category] = [];
                     groups[person.category].push(person);
                 });
-
                 for (let cat in groups) {
                     container.innerHTML += createTableHTML(cat, groups[cat]);
                 }
-            } else if (type === 'group2') {
-                // تقسيم إلى مجموعتين متساويتين
-                const half = Math.ceil(staff.length / 2);
-                const g1 = staff.slice(0, half);
-                const g2 = staff.slice(half);
-                container.innerHTML += createTableHTML("المجموعة الأولى", g1);
-                container.innerHTML += createTableHTML("المجموعة الثانية", g2);
-            } else if (type === 'group3') {
-                // تقسيم إلى 3 مجموعات
-                const third = Math.ceil(staff.length / 3);
-                const g1 = staff.slice(0, third);
-                const g2 = staff.slice(third, third * 2);
-                const g3 = staff.slice(third * 2);
-                container.innerHTML += createTableHTML("المجموعة الأولى", g1);
-                container.innerHTML += createTableHTML("المجموعة الثانية", g2);
-                container.innerHTML += createTableHTML("المجموعة الثالثة", g3);
+            } else if (type === 'activeOnly') {
+                const filtered = activeStaff.filter(p => p.category !== "لا يقومون بأي اعمال داخل الادارة");
+                container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered);
+            } else if (type === 'group2' || type === 'group3' || type === 'group4') {
+                let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
+                let chunks = Array.from({ length: numGroups }, () => []);
+                activeStaff.forEach((p, index) => {
+                    chunks[index % numGroups].push(p);
+                });
+                chunks.forEach((chunk, index) => {
+                    container.innerHTML += createTableHTML(`المجموعة الرابعة (${index + 1})`.replace('الرابعة', ''), chunk);
+                });
             }
         }
 
@@ -193,29 +243,36 @@
                 `;
             });
 
+            if (list.length === 0) {
+                rows = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
+            }
+
             return `
-                <div class="section-title">${title}</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>الاسم</th>
-                            <th>الرتبة</th>
-                            <th>التكليف</th>
-                            <th>الملاحظات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows}
-                    </tbody>
-                </table>
+                <div class="section-title">${title} (${list.length})</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الاسم</th>
+                                <th>الرتبة</th>
+                                <th>التكليف</th>
+                                <th>الملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
 
-        // تشغيل العرض الافتراضي عند فتح الصفحة
-        window.onload = () => renderStructure('default');
+        window.onload = () => {
+            initExclusionCheckboxes();
+            renderStructure('default');
+        };
 
-        // منع النقر بالزر الأيمن وحماية الشاشة
         document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
