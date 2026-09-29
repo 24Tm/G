@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة وتوزيع منسوبي الإدارة</title>
+    <!-- استيراد خط كوفي أو خط عربي مريح -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+        }
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #38bdf8;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button.secondary {
+            background: #059669;
+        }
+        button.secondary:hover {
+            background: #047857;
+        }
+        .section-title {
+            background: #d97706;
+            color: white;
+            padding: 10px 15px;
+            font-weight: 700;
+            margin-top: 20px;
+            border-radius: 6px 6px 0 0;
+            font-size: 1.1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1e293b;
+            margin-bottom: 20px;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #334155;
+            font-size: 0.95rem;
+        }
+        th {
+            background: #334155;
+            color: #e2e8f0;
+        }
+        tr:hover {
+            background: #273548;
+        }
+        /* حماية ضد تصوير الشاشة وتحديد النصوص */
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>📁 نظام هيكلة وتوزيع منسوبي الإدارة</h1>
+            <div class="controls">
+                <button onclick="renderStructure('default')">الهيكلة الإدارية الأصلية</button>
+                <button class="secondary" onclick="renderStructure('group2')">تقسيم إلى مجموعتين</button>
+                <button onclick="renderStructure('group3')">تقسيم إلى 3 مجموعات</button>
+            </div>
+        </header>
+
+        <div id="content-area">
+            <!-- سيتم تعبئة الجداول هنا برمجياً -->
+        </div>
+    </div>
+
+    <script>
+        // قاعدة بيانات المنسوبين المستوحاة من صورتك التنظيمية
+        const staff = [
+            { id: 1, name: "عبدالرحمن عبدالله الشمراني", rank: "رئيس رقباء", role: "رقيب الإدارة", category: "رقيب الإدارة", notes: "رقيب الادارة" },
+            { id: 2, name: "عبدالرحمن سعود البواردي", rank: "رقيب اول", role: "مساعد الرقيب", category: "رقيب الإدارة", notes: "مساعد" },
+            { id: 3, name: "عبدالرحمن خالد الحمود", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط" },
+            { id: 4, name: "أحمد بداي العتيبي", rank: "وكيل رقيب", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط+مراسل" },
+            { id: 5, name: "خالد عويتر المطيري", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "الترقيات" },
+            { id: 6, name: "طلال ناصر العتيبي", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
+            { id: 7, name: "محمد عواد المطيري", rank: "رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
+            { id: 8, name: "خالد شبيب الشيباني", rank: "رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
+            { id: 9, name: "نهار شعير الحربي", rank: "رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
+            { id: 10, name: "تركي سلطان العتيبي", rank: "وكيل رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
+            { id: 11, name: "فهد محسن العتيبي", rank: "عريف", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
+            { id: 12, name: "حمود عوض الله المطيري", rank: "رقيب", role: "ارشيف", category: "الارشيف والمراسلات", notes: "ارشيف" },
+            { id: 13, name: "محمد خويتم المطيري", rank: "وكيل رقيب", role: "ارشيف", category: "الارشيف والمراسلات", notes: "ارشيف" },
+            { id: 14, name: "تركي مشعل العتيبي", rank: "رقيب", role: "مراسل", category: "الارشيف والمراسلات", notes: "مراسل" },
+            { id: 15, name: "عبدالله احمد القحطاني", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 16, name: "عادي ظافر العتيبي", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 17, name: "نواف هادي العتيبي", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 18, name: "محمد ناصر العتيبي", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 19, name: "حسن ضاحي الدوسري", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 20, name: "ظافر سعد الدوسري", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 21, name: "ماجد فيحان الحربي", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 22, name: "بندر محمد المجعد", rank: "رئيس رقباء", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 23, name: "عبدالله علي العتيبي", rank: "رقيب", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 24, name: "ماهر الحميدي المطيري", rank: "رقيب", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 25, name: "ثامر حمود العتيبي", rank: "عريف", role: "خدمات", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 26, name: "عبدالله سحمان السبيعي", rank: "رئيس رقباء", role: "راحة", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" }
+        ];
+
+        function renderStructure(type) {
+            const container = document.getElementById('content-area');
+            container.innerHTML = '';
+
+            if (type === 'default') {
+                // التوزيع الأصلي حسب الأقسام
+                const groups = {};
+                staff.forEach(person => {
+                    if (!groups[person.category]) groups[person.category] = [];
+                    groups[person.category].push(person);
+                });
+
+                for (let cat in groups) {
+                    container.innerHTML += createTableHTML(cat, groups[cat]);
+                }
+            } else if (type === 'group2') {
+                // تقسيم إلى مجموعتين متساويتين
+                const half = Math.ceil(staff.length / 2);
+                const g1 = staff.slice(0, half);
+                const g2 = staff.slice(half);
+                container.innerHTML += createTableHTML("المجموعة الأولى", g1);
+                container.innerHTML += createTableHTML("المجموعة الثانية", g2);
+            } else if (type === 'group3') {
+                // تقسيم إلى 3 مجموعات
+                const third = Math.ceil(staff.length / 3);
+                const g1 = staff.slice(0, third);
+                const g2 = staff.slice(third, third * 2);
+                const g3 = staff.slice(third * 2);
+                container.innerHTML += createTableHTML("المجموعة الأولى", g1);
+                container.innerHTML += createTableHTML("المجموعة الثانية", g2);
+                container.innerHTML += createTableHTML("المجموعة الثالثة", g3);
+            }
+        }
+
+        function createTableHTML(title, list) {
+            let rows = '';
+            list.forEach((p, index) => {
+                rows += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${p.name}</td>
+                        <td>${p.rank}</td>
+                        <td>${p.role}</td>
+                        <td>${p.notes}</td>
+                    </tr>
+                `;
+            });
+
+            return `
+                <div class="section-title">${title}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم</th>
+                            <th>الرتبة</th>
+                            <th>التكليف</th>
+                            <th>الملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // تشغيل العرض الافتراضي عند فتح الصفحة
+        window.onload = () => renderStructure('default');
+
+        // منع النقر بالزر الأيمن وحماية الشاشة
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+</body>
+</html>
