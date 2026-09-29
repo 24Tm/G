@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة وتوزيع منسوبي الإدارة</title>
-    <!-- استيراد مكتبات Firebase Realtime Database للتزامن السحابي -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
         * {
@@ -291,7 +288,6 @@
             const listDiv = document.getElementById('exclusion-list');
             listDiv.innerHTML = '';
             staffData.forEach(p => {
-                // استبعاد غير العاملين افتراضياً بناءً على الملاحظات أو الفئة
                 let isChecked = !p.notes.includes("لا يعمل") && p.category !== "لا يقومون بأي اعمال داخل الادارة";
                 listDiv.innerHTML += `
                     <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer;">
@@ -329,6 +325,8 @@
                 container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered);
             } else if (type === 'group2' || type === 'group3' || type === 'group4') {
                 let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
+                
+                // تجميع الموظفين حسب الوظيفة لضمان التنوع العادل
                 const roleGroups = {};
                 activeStaff.forEach(person => {
                     let key = person.role;
@@ -337,15 +335,19 @@
                 });
 
                 let groupsArray = Array.from({ length: numGroups }, () => []);
+                
+                // توزيع دوري ذكي لضمان التقارب العددي الشديد (فرق لا يتجاوز 1 كحد أقصى)
                 for (let role in roleGroups) {
                     let members = roleGroups[role];
-                    members.forEach((member, index) => {
-                        groupsArray[index % numGroups].push(member);
+                    // ترتيب تصاعدي للمجموعات حسب الأقل أفراداً حالياً
+                    members.forEach(member => {
+                        groupsArray.sort((a, b) => a.length - b.length);
+                        groupsArray[0].push(member);
                     });
                 }
 
                 groupsArray.forEach((groupMembers, index) => {
-                    container.innerHTML += createTableHTML(`المجموعة (${index + 1}) - موزعة حسب الوظائف`, groupMembers);
+                    container.innerHTML += createTableHTML(`المجموعة (${index + 1}) - (الإجمالي: ${groupMembers.length})`, groupMembers);
                 });
             }
         }
@@ -370,7 +372,7 @@
             }
 
             return `
-                <div class="section-title">${title} (${list.length})</div>
+                <div class="section-title">${title}</div>
                 <div class="table-responsive">
                     <table>
                         <thead>
