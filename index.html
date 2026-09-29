@@ -152,9 +152,9 @@
             <h1>📁 نظام هيكلة وتوزيع منسوبي الإدارة</h1>
             <div class="controls">
                 <button onclick="renderStructure('default')">الهيكلة الأصلية</button>
-                <button class="secondary" onclick="renderStructure('group2')">مجموعتان</button>
-                <button class="warning" onclick="renderStructure('group3')">3 مجموعات</button>
-                <button onclick="renderStructure('group4')">4 مجموعات</button>
+                <button class="secondary" onclick="renderStructure('group2')">مجموعتان (حسب الوظيفة)</button>
+                <button class="warning" onclick="renderStructure('group3')">3 مجموعات (حسب الوظيفة)</button>
+                <button onclick="renderStructure('group4')">4 مجموعات (حسب الوظيفة)</button>
                 <button class="secondary" onclick="renderStructure('activeOnly')">العاملون بالداخل</button>
                 <button class="print-btn" onclick="window.print()">🖨️ طباعة / PDF</button>
             </div>
@@ -246,12 +246,30 @@
                 container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered);
             } else if (type === 'group2' || type === 'group3' || type === 'group4') {
                 let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
-                let chunks = Array.from({ length: numGroups }, () => []);
-                activeStaff.forEach((p, index) => {
-                    chunks[index % numGroups].push(p);
+                
+                // تجميع الموظفين حسب نوع الوظيفة (Role / Category) لضمان التوزيع العادل لكل مهام
+                const roleGroups = {};
+                activeStaff.forEach(person => {
+                    let key = person.role; // الاعتماد على الوظيفة/التكليف الدقيق
+                    if (!roleGroups[key]) roleGroups[key] = [];
+                    roleGroups[key].push(person);
                 });
-                chunks.forEach((chunk, index) => {
-                    container.innerHTML += createTableHTML(`المجموعة (${index + 1})`, chunk);
+
+                // تهيئة المجموعات الفارغة
+                let groupsArray = Array.from({ length: numGroups }, () => []);
+
+                // توزيع كل وظيفة بالتساوي على المجموعات
+                for (let role in roleGroups) {
+                    let members = roleGroups[role];
+                    members.forEach((member, index) => {
+                        let targetGroupIndex = index % numGroups;
+                        groupsArray[targetGroupIndex].push(member);
+                    });
+                }
+
+                // عرض المجموعات الناتجة
+                groupsArray.forEach((groupMembers, index) => {
+                    container.innerHTML += createTableHTML(`المجموعة (${index + 1}) - موزعة حسب الوظائف`, groupMembers);
                 });
             }
         }
