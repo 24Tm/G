@@ -62,6 +62,12 @@
         button.warning {
             background: #d97706;
         }
+        button.print-btn {
+            background: #7c3aed;
+        }
+        button.print-btn:hover {
+            background: #6d28d9;
+        }
         .section-title {
             background: #334155;
             color: #38bdf8;
@@ -97,22 +103,42 @@
         tr:hover {
             background: #273548;
         }
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #1e293b;
-            padding: 10px;
-            border-radius: 6px;
+        .exclusion-box {
+            background: #1e293b; 
+            padding: 10px; 
+            border-radius: 6px; 
             margin-bottom: 15px;
-            font-size: 0.9rem;
-            justify-content: space-between;
         }
-        input[type="checkbox"] {
-            transform: scale(1.2);
-            cursor: pointer;
+        
+        /* تنسيق خاص للطباعة */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0;
+            }
+            header, .exclusion-box, .controls {
+                display: none !important;
+            }
+            table {
+                background: white !important;
+                color: black !important;
+                border: 1px solid #ddd;
+            }
+            th, td {
+                border-bottom: 1px solid #ddd;
+                color: black !important;
+            }
+            th {
+                background: #f1f5f9 !important;
+            }
+            .section-title {
+                background: #e2e8f0 !important;
+                color: black !important;
+                border-bottom: 2px solid #000;
+            }
         }
-        /* منع تحديد النصوص وحماية الشاشة */
+
         body {
             -webkit-user-select: none;
             user-select: none;
@@ -129,12 +155,13 @@
                 <button class="secondary" onclick="renderStructure('group2')">مجموعتان</button>
                 <button class="warning" onclick="renderStructure('group3')">3 مجموعات</button>
                 <button onclick="renderStructure('group4')">4 مجموعات</button>
-                <button class="secondary" onclick="renderStructure('activeOnly')">العاملون بالداخل فقط</button>
+                <button class="secondary" onclick="renderStructure('activeOnly')">العاملون بالداخل</button>
+                <button class="print-btn" onclick="window.print()">🖨️ طباعة / PDF</button>
             </div>
         </header>
 
         <!-- قائمة التحكم بالاستبعاد اليدوي -->
-        <div style="background: #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+        <div class="exclusion-box">
             <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">إلغاء التحديد أدناه يستبعد الشخص تماماً من أي تقسيم آلي:</p>
             <div id="exclusion-list" style="display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto;">
                 <!-- يُعبأ تلقائياً -->
@@ -224,7 +251,7 @@
                     chunks[index % numGroups].push(p);
                 });
                 chunks.forEach((chunk, index) => {
-                    container.innerHTML += createTableHTML(`المجموعة الرابعة (${index + 1})`.replace('الرابعة', ''), chunk);
+                    container.innerHTML += createTableHTML(`المجموعة (${index + 1})`, chunk);
                 });
             }
         }
