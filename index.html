@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة وتوزيع منسوبي الإدارة</title>
+    <title>إدارة وتوزيع منسوبي إدارة الشؤون الإدارية</title>
     
     <style>
         * {
@@ -20,6 +20,9 @@
         .container {
             max-width: 1000px;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* توسيط المحتوى */
         }
         header {
             background: #1e293b;
@@ -28,11 +31,15 @@
             margin-bottom: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             text-align: center;
+            width: 100%;
         }
         h1 {
             font-size: 1.3rem;
             color: #38bdf8;
             margin-bottom: 12px;
+        }
+        .print-main-title {
+            display: none; /* تظهر فقط عند الطباعة */
         }
         .controls {
             display: flex;
@@ -83,6 +90,23 @@
         button.edit-btn:hover {
             background: #b45309;
         }
+        .exclusion-box {
+            background: #1e293b; 
+            padding: 10px; 
+            border-radius: 6px; 
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        #content-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .table-block {
+            width: 100%;
+            margin-bottom: 10px;
+        }
         .section-title {
             background: #334155;
             color: #38bdf8;
@@ -92,6 +116,7 @@
             border-radius: 6px 6px 0 0;
             font-size: 0.9rem;
             border-bottom: 2px solid #2563eb;
+            text-align: right;
         }
         .table-responsive {
             width: 100%;
@@ -101,7 +126,6 @@
             width: 100%;
             border-collapse: collapse;
             background: #1e293b;
-            margin-bottom: 10px;
             border-radius: 0 0 6px 6px;
             overflow: hidden;
             font-size: 0.85rem;
@@ -117,12 +141,6 @@
         }
         tr:hover {
             background: #273548;
-        }
-        .exclusion-box {
-            background: #1e293b; 
-            padding: 10px; 
-            border-radius: 6px; 
-            margin-bottom: 15px;
         }
 
         /* نافذة التعديل المنبثقة */
@@ -173,57 +191,74 @@
             justify-content: flex-end;
         }
         
-        /* إعدادات الطباعة لتظهر في صفحة واحدة A4 تماماً */
+        /* إعدادات الطباعة لصفحة واحدة A4 وتوسيط المحتوى وإفراغ الأعمدة المطلوبة */
         @media print {
             @page {
-                size: A4;
+                size: A4 portrait;
                 margin: 5mm;
             }
             body {
                 background: white !important;
                 color: black !important;
                 padding: 0 !important;
-                font-size: 8pt !important;
+                font-size: 7.5pt !important;
             }
             header, .exclusion-box, .controls, .edit-col {
                 display: none !important;
             }
+            .print-main-title {
+                display: block !important;
+                text-align: center;
+                font-size: 12pt;
+                font-weight: bold;
+                color: black !important;
+                margin-bottom: 8px;
+                padding-bottom: 4px;
+                border-bottom: 2px solid #000;
+            }
             .container {
                 max-width: 100% !important;
-                margin: 0 !important;
+                margin: 0 auto !important;
                 padding: 0 !important;
+                align-items: center !important;
             }
             #content-area {
                 display: flex;
                 flex-direction: column;
-                gap: 4px;
+                gap: 3px;
+                align-items: center;
+            }
+            .table-block {
+                width: 100% !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
             .section-title {
                 background: #e2e8f0 !important;
                 color: black !important;
                 border-bottom: 1px solid #000;
-                padding: 3px 6px !important;
-                font-size: 8.5pt !important;
-                margin-top: 4px !important;
-                page-break-after: avoid;
-                break-after: avoid;
+                padding: 2px 5px !important;
+                font-size: 8pt !important;
+                margin-top: 3px !important;
             }
             table {
                 background: white !important;
                 color: black !important;
-                border: 1px solid #ccc;
-                margin-bottom: 4px !important;
-                font-size: 8pt !important;
-                page-break-inside: avoid;
-                break-inside: avoid;
+                border: 1px solid #bbb;
+                margin-bottom: 2px !important;
+                font-size: 7.5pt !important;
             }
             th, td {
-                padding: 3px 5px !important;
-                border-bottom: 1px solid #ccc !important;
+                padding: 2px 4px !important;
+                border-bottom: 1px solid #bbb !important;
                 color: black !important;
             }
             th {
                 background: #f1f5f9 !important;
+            }
+            /* إخفاء محتوى خلايا التكليف والملاحظات وجعلها فارغة تماماً عند الطباعة */
+            .print-empty-cell {
+                color: transparent !important;
             }
         }
     </style>
@@ -231,6 +266,8 @@
 <body>
 
     <div class="container">
+        <div class="print-main-title">منسوبي إدارة الشؤون الإدارية</div>
+        
         <header>
             <h1>📁 نظام هيكلة وتوزيع منسوبي الإدارة</h1>
             <div class="controls">
@@ -311,11 +348,10 @@
             { id: 22, name: "بندر محمد المجعد", rank: "رئيس رقباء", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
             { id: 23, name: "عبدالله علي العتيبي", rank: "رقيب", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
             { id: 24, name: "ماهر الحميدي المطيري", rank: "رقيب", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 25, name: "ثامر حمود العتيبي", rank: "عريف", role: "خدمات", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
+            { id: 25, name: "ثامر حمود العتيبي", rank: "عريف", role: "خدمات", category: "شؤون الأفراد", notes: "خدمات" }, // تم تعديل فئته ليظهر تلقائياً
             { id: 26, name: "عبدالله سحمان السبيعي", rank: "رئيس رقباء", role: "راحة", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" }
         ];
 
-        // استرجاع البيانات المحفوظة أو استخدام الافتراضية
         let staffData = JSON.parse(localStorage.getItem('staffData')) || JSON.parse(JSON.stringify(defaultStaffData));
         let currentMode = 'default';
 
@@ -336,7 +372,10 @@
             const listDiv = document.getElementById('exclusion-list');
             listDiv.innerHTML = '';
             staffData.forEach(p => {
+                // جعل ثامر حمود (id: 25) وبقية العاملين مفعلين افتراضياً
                 let isChecked = !p.notes.includes("لا يعمل") && p.category !== "لا يقومون بأي اعمال داخل الادارة";
+                if(p.id === 25) isChecked = true; 
+
                 listDiv.innerHTML += `
                     <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer;">
                         <input type="checkbox" id="chk_${p.id}" value="${p.id}" ${isChecked ? 'checked' : ''} onchange="renderStructure(currentMode)"> ${p.name.split(' ')[0]} ${p.name.split(' ')[1]}
@@ -405,8 +444,8 @@
                         <td>${index + 1}</td>
                         <td>${p.name}</td>
                         <td>${p.rank}</td>
-                        <td>${p.role}</td>
-                        <td>${p.notes}</td>
+                        <td class="print-empty-cell">${p.role}</td>
+                        <td class="print-empty-cell">${p.notes}</td>
                         <td class="edit-col"><button class="edit-btn" onclick="openEditModal(${p.id})">✏️ تعديل</button></td>
                     </tr>
                 `;
@@ -417,23 +456,25 @@
             }
 
             return `
-                <div class="section-title">${title}</div>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>الاسم</th>
-                                <th>الرتبة</th>
-                                <th>التكليف</th>
-                                <th>الملاحظات</th>
-                                <th class="edit-col" style="width: 70px;">إجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
+                <div class="table-block">
+                    <div class="section-title">${title}</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>الرتبة</th>
+                                    <th>التكليف</th>
+                                    <th>الملاحظات</th>
+                                    <th class="edit-col" style="width: 70px;">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             `;
         }
@@ -462,7 +503,6 @@
                 person.role = document.getElementById('editRole').value;
                 person.notes = document.getElementById('editNotes').value;
                 
-                // حفظ التعديلات مباشرة في التخزين المحلي
                 saveToLocalStorage();
             }
             closeModal();
