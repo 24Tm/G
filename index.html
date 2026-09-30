@@ -69,6 +69,12 @@
         button.print-btn:hover {
             background: #6d28d9;
         }
+        button.danger-btn {
+            background: #ef4444;
+        }
+        button.danger-btn:hover {
+            background: #dc2626;
+        }
         button.edit-btn {
             background: #d97706;
             padding: 3px 6px;
@@ -234,6 +240,7 @@
                 <button onclick="renderStructure('group4')">4 مجموعات</button>
                 <button class="secondary" onclick="renderStructure('activeOnly')">العاملون بالداخل</button>
                 <button class="print-btn" onclick="window.print()">🖨 طباعة / PDF</button>
+                <button class="danger-btn" onclick="resetData()">↺ استعادة الافتراضي</button>
             </div>
         </header>
 
@@ -277,9 +284,9 @@
 
     <script>
         // ==========================================
-        // 📌 قاعدة البيانات (الأسماء، الرتب، الوظائف)
+        // 📌 قاعدة البيانات الافتراضية
         // ==========================================
-        let staffData = [
+        const defaultStaffData = [
             { id: 1, name: "عبدالرحمن عبدالله الشمراني", rank: "رئيس رقباء", role: "رقيب الإدارة", category: "رقيب الإدارة", notes: "رقيب الادارة" },
             { id: 2, name: "عبدالرحمن سعود البواردي", rank: "رقيب اول", role: "مساعد الرقيب", category: "رقيب الإدارة", notes: "مساعد" },
             { id: 3, name: "عبدالرحمن خالد الحمود", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط" },
@@ -308,7 +315,22 @@
             { id: 26, name: "عبدالله سحمان السبيعي", rank: "رئيس رقباء", role: "راحة", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" }
         ];
 
+        // استرجاع البيانات المحفوظة أو استخدام الافتراضية
+        let staffData = JSON.parse(localStorage.getItem('staffData')) || JSON.parse(JSON.stringify(defaultStaffData));
         let currentMode = 'default';
+
+        function saveToLocalStorage() {
+            localStorage.setItem('staffData', JSON.stringify(staffData));
+        }
+
+        function resetData() {
+            if (confirm("هل أنت متأكد من استعادة البيانات الافتراضية وحذف التعديلات؟")) {
+                localStorage.removeItem('staffData');
+                staffData = JSON.parse(JSON.stringify(defaultStaffData));
+                initExclusionCheckboxes();
+                renderStructure(currentMode);
+            }
+        }
 
         function initExclusionCheckboxes() {
             const listDiv = document.getElementById('exclusion-list');
@@ -439,6 +461,9 @@
                 person.rank = document.getElementById('editRank').value;
                 person.role = document.getElementById('editRole').value;
                 person.notes = document.getElementById('editNotes').value;
+                
+                // حفظ التعديلات مباشرة في التخزين المحلي
+                saveToLocalStorage();
             }
             closeModal();
             initExclusionCheckboxes();
