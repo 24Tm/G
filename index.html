@@ -1,3 +1,5 @@
+تفضل، تم تحديث الكود بحيث يعرض الأسماء فقط التي عليها علامة صح (بدون أعمدة التواريخ أو الأيام)، وعند إزالة التأشيرة (الصح) من أي اسم، يختفي فوراً من قائمة المناوبين ويتحدث الجدول تلقائياً.
+يمكنك نسخ الكود الكامل واستبداله بالملف لديك:
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -271,7 +273,7 @@
 <body>
 
     <div class="container">
-        <div class="print-main-title">منسوبي إدارة الشؤون الإدارية - جدول المناوبة اليومية</div>
+        <div class="print-main-title">منسوبي إدارة الشؤون الإدارية - قائمة المناوبين المختارين</div>
         
         <header>
             <h1>📁 نظام هيكلة وتوزيع منسوبي الإدارة</h1>
@@ -281,14 +283,14 @@
                 <button class="warning" onclick="renderStructure('group3')">3 مجموعات</button>
                 <button onclick="renderStructure('group4')">4 مجموعات</button>
                 <button class="secondary" onclick="renderStructure('activeOnly')">العاملون بالداخل</button>
-                <button class="warning" style="background: #0284c7;" onclick="renderStructure('onCallSchedule')">📅 جدول المناوبين اليومي</button>
+                <button class="warning" style="background: #0284c7;" onclick="renderStructure('onCallSchedule')">📋 قائمة المناوبين المؤشرين</button>
                 <button class="print-btn" onclick="window.print()">🖨 طباعة / PDF</button>
                 <button class="danger-btn" onclick="resetData()">↺ استعادة الافتراضي</button>
             </div>
         </header>
 
         <div class="exclusion-box">
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">التحكم بالاستبعاد (تم استبعاد غير العاملين بالإدارة افتراضياً):</p>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">التحكم بالاستبعاد (حدد علامة صح أمام الموظفين المراد إدراجهم في قائمة المناوبين):</p>
             <div id="exclusion-list" style="display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto;">
                 <!-- يُعبأ تلقائياً -->
             </div>
@@ -331,7 +333,7 @@
             { id: 2, name: "عبدالرحمن سعود البواردي", rank: "رقيب اول", role: "مساعد الرقيب", category: "رقيب الإدارة", notes: "مساعد" },
             { id: 3, name: "عبدالرحمن خالد الحمود", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط" },
             { id: 4, name: "أحمد بداي العتيبي", rank: "وكيل رقيب", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط+مراسل" },
-            { id: 5, name: "خالد عويمر المطيري", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "الترقيات" },
+            { id: 5, name: "خالد عويتر المطيري", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "الترقيات" },
             { id: 6, name: "طلال ناصر العتيبي", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
             { id: 7, name: "محمد عواد المطيري", rank: "رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
             { id: 8, name: "خالد شبيب الشيباني", rank: "رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
@@ -413,41 +415,8 @@
                 const filtered = activeStaff.filter(p => p.category !== "لا يقومون بأي اعمال داخل الادارة" && !p.notes.includes("لا يعمل"));
                 container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered);
             } else if (type === 'onCallSchedule') {
-                // استخراج المناوبين (من لديهم دور مناوب أو تم اختيارهم كمناوبين)
-                // نفترض المناوبين هم من دورهم 'مناوب' أو من الفئة الخاصة بهم
-                const onCallList = staffData.filter(p => p.role === "مناوب" || p.notes.includes("مناوب"));
-                
-                if (onCallList.length === 0) {
-                    container.innerHTML = `<div style="padding: 20px; color: #f87171; text-align: center;">لا توجد عناصر محددة كمناوبين. يرجى تعديل دور بعض الأفراد إلى "مناوب".</div>`;
-                    return;
-                }
-
-                // توليد جدول لمدة 30 يوماً تبدأ من اليوم
-                let scheduleRows = [];
-                let today = new Date();
-                
-                for (let i = 0; i < 30; i++) {
-                    let currentDate = new Date(today);
-                    currentDate.setDate(today.getDate() + i);
-                    
-                    // تخطي أيام العطل الرسمية إن أردت، أو جدولتها يومياً. هنا جدولتها يومياً متتالياً:
-                    let assignedPerson = onCallList[i % onCallList.length];
-                    
-                    let options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
-                    let dateString = currentDate.toLocaleDateString('ar-SA', options);
-
-                    scheduleRows.push({
-                        index: i + 1,
-                        date: dateString,
-                        name: assignedPerson.name,
-                        rank: assignedPerson.rank,
-                        role: assignedPerson.role,
-                        notes: `مناوب يومي`
-                    });
-                }
-
-                container.innerHTML += createTableHTML("جدول المناوبة اليومية (مناوب واحد يومياً)", scheduleRows, true);
-
+                // يعرض الأسماء المؤشر عليها فقط بدون تواريخ
+                container.innerHTML += createTableHTML("قائمة المناوبين المؤشرين", activeStaff);
             } else if (type === 'group2' || type === 'group3' || type === 'group4') {
                 let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
                 
@@ -474,59 +443,27 @@
             }
         }
 
-        function createTableHTML(title, list, isSchedule = false) {
+        function createTableHTML(title, list) {
             let rows = '';
             list.forEach((p, index) => {
-                if (isSchedule) {
-                    rows += `
-                        <tr>
-                            <td>${p.index}</td>
-                            <td>${p.date}</td>
-                            <td>${p.name}</td>
-                            <td>${p.rank}</td>
-                            <td>${p.role}</td>
-                        </tr>
-                    `;
-                } else {
-                    rows += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${p.name}</td>
-                            <td>${p.rank}</td>
-                            <td class="print-empty-cell">${p.role}</td>
-                            <td class="print-empty-cell">${p.notes}</td>
-                            <td class="edit-col"><button class="edit-btn" onclick="openEditModal(${p.id})">✏ تعديل</button></td>
-                        </tr>
-                    `;
-                }
+                rows += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${p.name}</td>
+                        <td>${p.rank}</td>
+                        <td class="print-empty-cell">${p.role}</td>
+                        <td class="print-empty-cell">${p.notes}</td>
+                        <td class="edit-col"><button class="edit-btn" onclick="openEditModal(${p.id})">✏ تعديل</button></td>
+                    </tr>
+                `;
             });
 
             if (list.length === 0) {
-                let colSpan = isSchedule ? 5 : 6;
-                rows = `<tr><td colspan="${colSpan}" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
+                rows = `<tr><td colspan="6" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
             }
 
-            const isInactiveGroup = title.includes("لا يقومون بأي اعمال") && !isSchedule;
+            const isInactiveGroup = title.includes("لا يقومون بأي اعمال") && title !== "قائمة المناوبين المؤشرين";
             const blockClass = isInactiveGroup ? "table-block hide-on-print" : "table-block";
-
-            let headers = isSchedule ? `
-                <tr>
-                    <th>م</th>
-                    <th>التاريخ / اليوم</th>
-                    <th>اسم المناوب</th>
-                    <th>الرتبة</th>
-                    <th>التكليف</th>
-                </tr>
-            ` : `
-                <tr>
-                    <th>#</th>
-                    <th>الاسم</th>
-                    <th>الرتبة</th>
-                    <th>التكليف</th>
-                    <th>الملاحظات</th>
-                    <th class="edit-col" style="width: 70px;">إجراء</th>
-                </tr>
-            `;
 
             return `
                 <div class="${blockClass}">
@@ -534,7 +471,14 @@
                     <div class="table-responsive">
                         <table>
                             <thead>
-                                ${headers}
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>الرتبة</th>
+                                    <th>التكليف</th>
+                                    <th>الملاحظات</th>
+                                    <th class="edit-col" style="width: 70px;">إجراء</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 ${rows}
@@ -583,3 +527,4 @@
     </script>
 </body>
 </html>
+
