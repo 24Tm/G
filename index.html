@@ -1,5 +1,5 @@
-
-
+تفضل، تم تحديث الكود بحيث أنه عند النقر على زر (📋 قائمة المناوبين المؤشرين)، سيظهر الجدول مقتصرًا على العدد، الاسم، والرتبة فقط، مع إخفاء باقي الأعمدة (التكليف والملاحظات وأزرار التعديل) تماماً، بينما تبقى الجداول الأخرى بالشكل الاعتيادي.
+يمكنك نسخ الكود الكامل أدناه واستبداله بالكامل:
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -409,14 +409,14 @@
                     groups[cat].push(person);
                 });
                 for (let cat in groups) {
-                    container.innerHTML += createTableHTML(cat, groups[cat]);
+                    container.innerHTML += createTableHTML(cat, groups[cat], false);
                 }
             } else if (type === 'activeOnly') {
                 const filtered = activeStaff.filter(p => p.category !== "لا يقومون بأي اعمال داخل الادارة" && !p.notes.includes("لا يعمل"));
-                container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered);
+                container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered, false);
             } else if (type === 'onCallSchedule') {
-                // يعرض الأسماء المؤشر عليها فقط بدون تواريخ
-                container.innerHTML += createTableHTML("قائمة المناوبين المؤشرين", activeStaff);
+                // جدول المناوبين المؤشرين (العدد، الاسم، الرتبة فقط)
+                container.innerHTML += createTableHTML("قائمة المناوبين المؤشرين", activeStaff, true);
             } else if (type === 'group2' || type === 'group3' || type === 'group4') {
                 let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
                 
@@ -438,32 +438,60 @@
                 }
 
                 groupsArray.forEach((groupMembers, index) => {
-                    container.innerHTML += createTableHTML(`المجموعة (${index + 1}) - (الإجمالي: ${groupMembers.length})`, groupMembers);
+                    container.innerHTML += createTableHTML(`المجموعة (${index + 1}) - (الإجمالي: ${groupMembers.length})`, groupMembers, false);
                 });
             }
         }
 
-        function createTableHTML(title, list) {
+        function createTableHTML(title, list, isCompactSchedule) {
             let rows = '';
             list.forEach((p, index) => {
-                rows += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${p.name}</td>
-                        <td>${p.rank}</td>
-                        <td class="print-empty-cell">${p.role}</td>
-                        <td class="print-empty-cell">${p.notes}</td>
-                        <td class="edit-col"><button class="edit-btn" onclick="openEditModal(${p.id})">✏ تعديل</button></td>
-                    </tr>
-                `;
+                if (isCompactSchedule) {
+                    rows += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${p.name}</td>
+                            <td>${p.rank}</td>
+                        </tr>
+                    `;
+                } else {
+                    rows += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${p.name}</td>
+                            <td>${p.rank}</td>
+                            <td class="print-empty-cell">${p.role}</td>
+                            <td class="print-empty-cell">${p.notes}</td>
+                            <td class="edit-col"><button class="edit-btn" onclick="openEditModal(${p.id})">✏ تعديل</button></td>
+                        </tr>
+                    `;
+                }
             });
 
             if (list.length === 0) {
-                rows = `<tr><td colspan="6" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
+                let colSpan = isCompactSchedule ? 3 : 6;
+                rows = `<tr><td colspan="${colSpan}" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
             }
 
-            const isInactiveGroup = title.includes("لا يقومون بأي اعمال") && title !== "قائمة المناوبين ";
+            const isInactiveGroup = title.includes("لا يقومون بأي اعمال") && !isCompactSchedule;
             const blockClass = isInactiveGroup ? "table-block hide-on-print" : "table-block";
+
+            let headers = isCompactSchedule ? `
+                <tr>
+                    <th style="width: 50px;">العدد</th>
+                    <th>الاسم</th>
+                    <th>الرتبة</th>
+                </tr>
+            ` : `
+                <tr>
+                    <th>#</th>
+                    <th>الاسم</th>
+                    <th>الرتبة</th>
+                    <th>التكليف</th>
+                    <th>الملاحظات</th>
+                    <th class="edit-col" style="width: 70px;">إجراء</th>
+                </tr>
+            `;
 
             return `
                 <div class="${blockClass}">
@@ -471,14 +499,7 @@
                     <div class="table-responsive">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>الاسم</th>
-                                    <th>الرتبة</th>
-                                    <th>التكليف</th>
-                                    <th>الملاحظات</th>
-                                    <th class="edit-col" style="width: 70px;">إجراء</th>
-                                </tr>
+                                ${headers}
                             </thead>
                             <tbody>
                                 ${rows}
