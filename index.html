@@ -1,5 +1,5 @@
-تفضل، تم تحديث الكود بحيث يعرض الأسماء فقط التي عليها علامة صح (بدون أعمدة التواريخ أو الأيام)، وعند إزالة التأشيرة (الصح) من أي اسم، يختفي فوراً من قائمة المناوبين ويتحدث الجدول تلقائياً.
-يمكنك نسخ الكود الكامل واستبداله بالملف لديك:
+
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -462,7 +462,7 @@
                 rows = `<tr><td colspan="6" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
             }
 
-            const isInactiveGroup = title.includes("لا يقومون بأي اعمال") && title !== "قائمة المناوبين المؤشرين";
+            const isInactiveGroup = title.includes("لا يقومون بأي اعمال") && title !== "قائمة المناوبين ";
             const blockClass = isInactiveGroup ? "table-block hide-on-print" : "table-block";
 
             return `
