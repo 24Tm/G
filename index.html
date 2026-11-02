@@ -79,12 +79,7 @@
         #map {
             width: 100%;
             height: 100%;
-            background: #111827 !important;
-        }
-        
-        /* فلتر مخصص لجعل خريطة الشوارع سوداء وداكنة ومريحة للعين */
-        .leaflet-tile {
-            filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) !important;
+            background: #0b0f19 !important;
         }
 
         /* لوحة المدن الممطرة المدمجة */
@@ -237,10 +232,11 @@
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // استخدام OpenStreetMap المجانية 100% والتي لا تتطلب أي مفاتيح أبداً
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 18
+        // استخدام طبقة شوارع ومباني داكنة احترافية وآمنة 100% (تظهر الشوارع والأحياء بوضوح عند التقريب دون أي رسائل خطأ)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            maxZoom: 18,
+            subdomains: 'abcd'
         }).addTo(map);
 
         let radarLayers = [];
@@ -250,18 +246,18 @@
         let animationInterval;
 
         const saudiLocations = [
-            { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 11 },
-            { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 11 },
-            { name: "جدة", lat: 21.5433, lon: 39.1728, zoom: 11 },
-            { name: "المدينة المنورة", lat: 24.5247, lon: 39.5692, zoom: 11 },
-            { name: "الدمام والمنطقة الشرقية", lat: 26.4207, lon: 50.0888, zoom: 11 },
-            { name: "أبها وعسير", lat: 18.2164, lon: 42.5053, zoom: 11 },
-            { name: "جازان", lat: 16.8894, lon: 42.5511, zoom: 11 },
-            { name: "الباحة", lat: 20.0129, lon: 41.4677, zoom: 11 },
-            { name: "تبوك", lat: 28.3835, lon: 36.5662, zoom: 11 },
-            { name: "حائل", lat: 27.5114, lon: 41.7208, zoom: 11 },
-            { name: "بريدة والقصيم", lat: 26.3592, lon: 43.9818, zoom: 11 },
-            { name: "نجران", lat: 17.4933, lon: 44.1277, zoom: 11 }
+            { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 12 },
+            { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 12 },
+            { name: "جدة", lat: 21.5433, lon: 39.1728, zoom: 12 },
+            { name: "المدينة المنورة", lat: 24.5247, lon: 39.5692, zoom: 12 },
+            { name: "الدمام والمنطقة الشرقية", lat: 26.4207, lon: 50.0888, zoom: 12 },
+            { name: "أبها وعسير", lat: 18.2164, lon: 42.5053, zoom: 12 },
+            { name: "جازان", lat: 16.8894, lon: 42.5511, zoom: 12 },
+            { name: "الباحة", lat: 20.0129, lon: 41.4677, zoom: 12 },
+            { name: "تبوك", lat: 28.3835, lon: 36.5662, zoom: 12 },
+            { name: "حائل", lat: 27.5114, lon: 41.7208, zoom: 12 },
+            { name: "بريدة والقصيم", lat: 26.3592, lon: 43.9818, zoom: 12 },
+            { name: "نجران", lat: 17.4933, lon: 44.1277, zoom: 12 }
         ];
 
         async function loadRadarData() {
@@ -279,7 +275,7 @@
 
                 pastFrames.forEach(frame => {
                     const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
-                        opacity: 0.85,
+                        opacity: 0.8,
                         tileSize: 256
                     });
                     radarLayers.push(layer);
@@ -333,7 +329,7 @@
             activeRainCities.forEach(city => {
                 let div = document.createElement('div');
                 div.className = 'city-item';
-                div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">انتقال ↗</span>`;
+                div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#0284c7; font-weight:bold;">انتقال ↗</span>`;
                 div.onclick = () => {
                     map.setView([city.lat, city.lon], city.zoom);
                 };
