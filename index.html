@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خريطة الأقمار الصناعية والموقع المباشر - السعودية</title>
+    <title>خريطة الأقمار الصناعية - تحديد ومشاركة المواقع</title>
     <!-- مكتبة Leaflet للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -93,17 +93,43 @@
         .leaflet-control-zoom a:hover {
             background-color: #1e293b !important;
         }
+        
+        /* تصميم نافذة الدبوس */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #0f172a !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .leaflet-popup-content b {
+            color: #38bdf8;
+        }
+        .share-popup-btn {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 6px;
+            width: 100%;
+            font-size: 0.8rem;
+        }
+        .share-popup-btn:hover {
+            background: #0284c7;
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div style="display:flex; align-items:center; gap:8px;">
-            <h1>🛰️ خريطة الأقمار الصناعية والموقع المباشر</h1>
+            <h1>📍 حدد موقعك أو ضع دبوساً للمشاركة</h1>
         </div>
         <div class="controls-group">
             <button class="btn" onclick="locateMe()">📍 موقعي الحالي</button>
-            <button class="btn btn-success" onclick="shareLocation()">🔗 مشاركة موقعي</button>
         </div>
     </header>
 
@@ -112,19 +138,20 @@
     </div>
 
     <!-- مكتبة Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // قراءة الإحداثيات إذا تم إرسالها عبر رابط المشاركة
+        // قراءة الإحداثيات إذا تم مشاركتها عبر الرابط
         const urlParams = new URLSearchParams(window.location.search);
         const sharedLat = parseFloat(urlParams.get('lat'));
         const sharedLon = parseFloat(urlParams.get('lon'));
 
-        let initialCenter = [23.8859, 45.0792]; // مركز السعودية الافتراضي
+        let initialCenter = [23.8859, 45.0792]; // مركز السعودية
         let initialZoom = 6;
 
         if (!isNaN(sharedLat) && !isNaN(sharedLon)) {
             initialCenter = [sharedLat, sharedLon];
-            initialZoom = 17; // تقريب فائق على الموقع المشارك
+            initialZoom = 17;
         }
 
         const map = L.map('map', {
@@ -141,52 +168,59 @@
             maxNativeZoom: 18
         }).addTo(map);
 
-        // طبقة أسماء الشوارع والمعالم فوق الأقمار الصناعية
+        // طبقة أسماء الشوارع والمعالم
         L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
             maxNativeZoom: 18
         }).addTo(map);
 
-        let userMarker = null;
-        let accuracyCircle = null;
+        let currentMarker = null;
 
-        // إذا تم فتح الرابط المشارك، ضع علامة على الموقع المستهدف
+        // إذا تم فتح الرابط من شخص آخر، ضع دبوساً فورياً على الموقع المستهدف
         if (!isNaN(sharedLat) && !isNaN(sharedLon)) {
-            userMarker = L.marker([sharedLat, sharedLon]).addTo(map)
-                .bindPopup("<b>📍 الموقع المشارك المستهدف</b>").openPopup();
+            setPin(sharedLat, sharedLon, "📍 الموقع المُشار إليه");
         }
 
-        // تحديث الموقع الحالي بالتزامن مع الحركة
+        // الضغط على الخريطة لوضع دبوس جديد
+        map.on('click', function(e) {
+            setPin(e.latlng.lat, e.latlng.lng, "📍 الموقع المحدّد");
+        });
+
+        function setPin(lat, lon, title) {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+
+            const popupContent = `
+                <div style="text-align: center;">
+                    <b>${title}</b><br>
+                    <span style="font-size: 0.75rem; color: #94a3b8;">(${lat.toFixed(4)}, ${lon.toFixed(4)})</span><br>
+                    <button class="share-popup-btn" onclick="shareSpecificLocation(${lat}, ${lon})">🔗 مشاركة هذا الموقع</button>
+                </div>
+            `;
+
+            currentMarker = L.marker([lat, lon]).addTo(map)
+                .bindPopup(popupContent)
+                .openPopup();
+        }
+
+        // نسخ رابط الدبوس المحدد لمشاركته
+        window.shareSpecificLocation = function(lat, lon) {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert("تم نسخ رابط هذا الموقع بنجاح! 🔗\nأرسله لصديقك وسيتجه مباشرة لهذه النقطة.");
+                });
+            } else {
+                prompt("انسخ هذا الرابط وأرسله:", shareUrl);
+            }
+        };
+
+        // زر تحديد موقعك الحالي (GPS)
         function locateMe() {
             if (!navigator.geolocation) {
-                alert("المتصفح لا يدعم تحديد الموقع الجغرافي");
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(position => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
-
-                if (userMarker) {
-                    userMarker.setLatLng([lat, lon]);
-                    accuracyCircle.setLatLng([lat, lon]);
-                    accuracyCircle.setRadius(accuracy);
-                } else {
-                    userMarker = L.marker([lat, lon]).addTo(map).bindPopup("📍 أنت هنا").openPopup();
-                    accuracyCircle = L.circle([lat, lon], { radius: accuracy, color: '#0ea5e9', fillColor: '#38bdf8', fillOpacity: 0.2 }).addTo(map);
-                }
-
-                map.setView([lat, lon], 17); // تقريب فائق على موقعك الحالي
-            }, error => {
-                alert("تعذر الحصول على موقعك. تأكد من السماح للمتصفح بالصلاحية.");
-            }, { enableHighAccuracy: true });
-        }
-
-        // مشاركة الموقع الحالي عبر رابط مباشر
-        function shareLocation() {
-            if (!navigator.geolocation) {
-                alert("المتصفح لا يدعم تحديد الموقع");
+                alert("متصفحك لا يدعم تحديد الموقع");
                 return;
             }
 
@@ -194,33 +228,11 @@
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 
-                const shareUrl = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
-                
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(shareUrl).then(() => {
-                        alert("تم نسخ رابط موقعك بنجاح! 🔗\nأرسله لأي شخص، وعندما يضغط عليه سيتوجه مباشرة إلى موقعك على الخريطة.");
-                    });
-                } else {
-                    prompt("انسخ هذا الرابط وأرسله لشخص آخر:", shareUrl);
-                }
+                map.setView([lat, lon], 17);
+                setPin(lat, lon, "📍 أنت هنا (موقعك الحالي)");
             }, error => {
-                alert("يرجى تفعيل تحديد الموقع أولاً للحصول على إحداثياتك.");
+                alert("تعذر الوصول لموقعك. تأكد من إعطاء الصلاحية للمتصفح.");
             }, { enableHighAccuracy: true });
-        }
-
-        // التتبع التلقائي لموقعك بالتزامن إذا سمح المستخدم
-        if (navigator.geolocation && isNaN(sharedLat)) {
-            navigator.geolocation.watchPosition(position => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
-
-                if (userMarker) {
-                    userMarker.setLatLng([lat, lon]);
-                    accuracyCircle.setLatLng([lat, lon]);
-                    accuracyCircle.setRadius(accuracy);
-                }
-            }, null, { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 });
         }
     </script>
 </body>
