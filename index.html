@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خريطة الأقمار الصناعية فائقة الدقة - السعودية</title>
+    <title>خريطة الأقمار الصناعية والموقع المباشر - السعودية</title>
     <!-- مكتبة Leaflet للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -49,15 +49,20 @@
             background: linear-gradient(135deg, #0ea5e9, #2563eb);
             color: white;
             border: none;
-            padding: 7px 14px;
+            padding: 8px 14px;
             border-radius: 9px;
             font-weight: 600;
             font-size: 0.82rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
         .btn:hover {
             transform: translateY(-1px);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         .main-container {
             position: relative;
@@ -70,62 +75,8 @@
             background: #0b0f19 !important;
         }
 
-        /* إخفاء حقوق الطبع والنشر لتصبح الخريطة نظيفة تماماً */
         .leaflet-control-attribution {
             display: none !important;
-        }
-
-        /* لوحة الانتقال السريع للمدن */
-        .cities-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(11, 16, 32, 0.95);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 12px 15px;
-            border-radius: 14px;
-            z-index: 1000;
-            width: 240px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        .panel-header {
-            font-size: 0.85rem;
-            color: #38bdf8;
-            font-weight: 700;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-bottom: 6px;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-        .cities-scroll {
-            max-height: 200px;
-            overflow-y: auto;
-            padding-right: 2px;
-        }
-        .cities-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .cities-scroll::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 2px;
-        }
-        .city-item {
-            font-size: 0.8rem;
-            color: #e2e8f0;
-            padding: 6px 10px;
-            margin: 4px 0;
-            background: rgba(30, 41, 59, 0.8);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .city-item:hover {
-            background: #0ea5e9;
-            color: #fff;
         }
 
         .leaflet-control-zoom {
@@ -148,36 +99,43 @@
 
     <header>
         <div style="display:flex; align-items:center; gap:8px;">
-            <h1>🛰️ خرائط الأقمار الصناعية فائقة الدقة - السعودية</h1>
+            <h1>🛰️ خريطة الأقمار الصناعية والموقع المباشر</h1>
         </div>
         <div class="controls-group">
-            <button class="btn" onclick="resetMap()">إعادة ضبط الخريطة 🌍</button>
+            <button class="btn" onclick="locateMe()">📍 موقعي الحالي</button>
+            <button class="btn btn-success" onclick="shareLocation()">🔗 مشاركة موقعي</button>
         </div>
     </header>
 
     <div class="main-container">
         <div id="map"></div>
-        
-        <!-- لوحة المدن والمناطق -->
-        <div class="cities-panel">
-            <div class="panel-header">📍 اختر مدينة للتقريب السريع</div>
-            <div class="cities-scroll" id="cities-container"></div>
-        </div>
     </div>
 
     <!-- مكتبة Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // إعداد الخريطة على مركز المملكة العربية السعودية مع تفعيل التقريب الحر
+        // قراءة الإحداثيات إذا تم إرسالها عبر رابط المشاركة
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedLat = parseFloat(urlParams.get('lat'));
+        const sharedLon = parseFloat(urlParams.get('lon'));
+
+        let initialCenter = [23.8859, 45.0792]; // مركز السعودية الافتراضي
+        let initialZoom = 6;
+
+        if (!isNaN(sharedLat) && !isNaN(sharedLon)) {
+            initialCenter = [sharedLat, sharedLon];
+            initialZoom = 17; // تقريب فائق على الموقع المشارك
+        }
+
         const map = L.map('map', {
             zoomControl: false,
             maxZoom: 19,
             minZoom: 4
-        }).setView([23.8859, 45.0792], 6);
+        }).setView(initialCenter, initialZoom);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // أقوى طبقة أقمار صناعية عالمية فائقة الدقة (بدون أي علامات مائية أو قيود مزعجة)
+        // طبقة الأقمار الصناعية فائقة الدقة
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
             maxNativeZoom: 18
@@ -189,32 +147,80 @@
             maxNativeZoom: 18
         }).addTo(map);
 
-        const saudiLocations = [
-            { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 16 },
-            { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 16 },
-            { name: "جدة", lat: 21.5433, lon: 39.1728, zoom: 16 },
-            { name: "المدينة المنورة", lat: 24.5247, lon: 39.5692, zoom: 16 },
-            { name: "الدمام", lat: 26.4207, lon: 50.0888, zoom: 16 },
-            { name: "أبها", lat: 18.2164, lon: 42.5053, zoom: 16 },
-            { name: "تبوك", lat: 28.3835, lon: 36.5662, zoom: 16 },
-            { name: "حائل", lat: 27.5114, lon: 41.7208, zoom: 16 },
-            { name: "بريدة", lat: 26.3592, lon: 43.9818, zoom: 16 },
-            { name: "جازان", lat: 16.8894, lon: 42.5511, zoom: 16 }
-        ];
+        let userMarker = null;
+        let accuracyCircle = null;
 
-        const container = document.getElementById('cities-container');
-        saudiLocations.forEach(city => {
-            let div = document.createElement('div');
-            div.className = 'city-item';
-            div.innerHTML = `<span>🏙️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">تقريب ↗</span>`;
-            div.onclick = () => {
-                map.setView([city.lat, city.lon], city.zoom);
-            };
-            container.appendChild(div);
-        });
+        // إذا تم فتح الرابط المشارك، ضع علامة على الموقع المستهدف
+        if (!isNaN(sharedLat) && !isNaN(sharedLon)) {
+            userMarker = L.marker([sharedLat, sharedLon]).addTo(map)
+                .bindPopup("<b>📍 الموقع المشارك المستهدف</b>").openPopup();
+        }
 
-        function resetMap() {
-            map.setView([23.8859, 45.0792], 6);
+        // تحديث الموقع الحالي بالتزامن مع الحركة
+        function locateMe() {
+            if (!navigator.geolocation) {
+                alert("المتصفح لا يدعم تحديد الموقع الجغرافي");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                if (userMarker) {
+                    userMarker.setLatLng([lat, lon]);
+                    accuracyCircle.setLatLng([lat, lon]);
+                    accuracyCircle.setRadius(accuracy);
+                } else {
+                    userMarker = L.marker([lat, lon]).addTo(map).bindPopup("📍 أنت هنا").openPopup();
+                    accuracyCircle = L.circle([lat, lon], { radius: accuracy, color: '#0ea5e9', fillColor: '#38bdf8', fillOpacity: 0.2 }).addTo(map);
+                }
+
+                map.setView([lat, lon], 17); // تقريب فائق على موقعك الحالي
+            }, error => {
+                alert("تعذر الحصول على موقعك. تأكد من السماح للمتصفح بالصلاحية.");
+            }, { enableHighAccuracy: true });
+        }
+
+        // مشاركة الموقع الحالي عبر رابط مباشر
+        function shareLocation() {
+            if (!navigator.geolocation) {
+                alert("المتصفح لا يدعم تحديد الموقع");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                const shareUrl = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert("تم نسخ رابط موقعك بنجاح! 🔗\nأرسله لأي شخص، وعندما يضغط عليه سيتوجه مباشرة إلى موقعك على الخريطة.");
+                    });
+                } else {
+                    prompt("انسخ هذا الرابط وأرسله لشخص آخر:", shareUrl);
+                }
+            }, error => {
+                alert("يرجى تفعيل تحديد الموقع أولاً للحصول على إحداثياتك.");
+            }, { enableHighAccuracy: true });
+        }
+
+        // التتبع التلقائي لموقعك بالتزامن إذا سمح المستخدم
+        if (navigator.geolocation && isNaN(sharedLat)) {
+            navigator.geolocation.watchPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                if (userMarker) {
+                    userMarker.setLatLng([lat, lon]);
+                    accuracyCircle.setLatLng([lat, lon]);
+                    accuracyCircle.setRadius(accuracy);
+                }
+            }, null, { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 });
         }
     </script>
 </body>
