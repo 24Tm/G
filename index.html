@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رادار الأمطار والأقمار الصناعية - السعودية</title>
+    <title>رادار الأمطار والأقمار الصناعية الفائقة - السعودية</title>
     <!-- مكتبة Leaflet للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -192,7 +192,7 @@
 
     <header>
         <div style="display:flex; align-items:center; gap:8px;">
-            <h1>🛰️ رادار الأقمار الصناعية والأمطار - السعودية</h1>
+            <h1>🛰️ قمر صناعي فائق الدقة - السعودية</h1>
         </div>
         <div class="controls-group">
             <span id="time-display">جاري التحميل...</span>
@@ -211,7 +211,7 @@
                 <span id="toggle-icon">▼</span>
             </div>
             <div class="cities-scroll" id="cities-container">
-                <div class="no-rain">جاري تحليل صور الأقمار...</div>
+                <div class="no-rain">جاري تحميل الأقمار الصناعية...</div>
             </div>
         </div>
 
@@ -225,23 +225,27 @@
     <!-- مكتبة Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // إعداد الخريطة بمركز المملكة العربية السعودية
+        // إعداد الخريطة بمركز المملكة العربية السعودية مع تفعيل أقصى درجات التقريب
         const map = L.map('map', {
-            zoomControl: false
+            zoomControl: false,
+            maxZoom: 19,
+            minZoom: 4
         }).setView([23.8859, 45.0792], 6);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // استخدام طبقة الأقمار الصناعية الحقيقية (Esri World Imagery) لتظهر المعالم والشوارع والأراضي الحقيقية من الفضاء
+        // استخدام طبقة صور الأقمار الصناعية العالمية الفائقة (Esri World Imagery) مع دعم التقريب العالي جداً
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Source: Esri, Maxar, GeoEye, Earthstar Geographics',
-            maxZoom: 17
+            maxZoom: 19,
+            maxNativeZoom: 18
         }).addTo(map);
 
-        // طبقة إضافية لتوضيح أسماء المدن والطرق فوق الأقمار الصناعية
+        // طبقة الحدود وتسميات الطرق والمنازل فوق الأقمار الصناعية بدقة واضحة
         L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
             attribution: '',
-            maxZoom: 17
+            maxZoom: 19,
+            maxNativeZoom: 18
         }).addTo(map);
 
         let radarLayers = [];
@@ -251,18 +255,18 @@
         let animationInterval;
 
         const saudiLocations = [
-            { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 12 },
-            { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 12 },
-            { name: "جدة", lat: 21.5433, lon: 39.1728, zoom: 12 },
-            { name: "المدينة المنورة", lat: 24.5247, lon: 39.5692, zoom: 12 },
-            { name: "الدمام والمنطقة الشرقية", lat: 26.4207, lon: 50.0888, zoom: 12 },
-            { name: "أبها وعسير", lat: 18.2164, lon: 42.5053, zoom: 12 },
-            { name: "جازان", lat: 16.8894, lon: 42.5511, zoom: 12 },
-            { name: "الباحة", lat: 20.0129, lon: 41.4677, zoom: 12 },
-            { name: "تبوك", lat: 28.3835, lon: 36.5662, zoom: 12 },
-            { name: "حائل", lat: 27.5114, lon: 41.7208, zoom: 12 },
-            { name: "بريدة والقصيم", lat: 26.3592, lon: 43.9818, zoom: 12 },
-            { name: "نجران", lat: 17.4933, lon: 44.1277, zoom: 12 }
+            { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 15 },
+            { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 15 },
+            { name: "جدة", lat: 21.5433, lon: 39.1728, zoom: 15 },
+            { name: "المدينة المنورة", lat: 24.5247, lon: 39.5692, zoom: 15 },
+            { name: "الدمام والمنطقة الشرقية", lat: 26.4207, lon: 50.0888, zoom: 15 },
+            { name: "أبها وعسير", lat: 18.2164, lon: 42.5053, zoom: 15 },
+            { name: "جازان", lat: 16.8894, lon: 42.5511, zoom: 15 },
+            { name: "الباحة", lat: 20.0129, lon: 41.4677, zoom: 15 },
+            { name: "تبوك", lat: 28.3835, lon: 36.5662, zoom: 15 },
+            { name: "حائل", lat: 27.5114, lon: 41.7208, zoom: 15 },
+            { name: "بريدة والقصيم", lat: 26.3592, lon: 43.9818, zoom: 15 },
+            { name: "نجران", lat: 17.4933, lon: 44.1277, zoom: 15 }
         ];
 
         async function loadRadarData() {
@@ -281,7 +285,8 @@
                 pastFrames.forEach(frame => {
                     const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
                         opacity: 0.85,
-                        tileSize: 256
+                        tileSize: 256,
+                        maxZoom: 19
                     });
                     radarLayers.push(layer);
                     timestamps.push(new Date(frame.time * 1000));
@@ -334,8 +339,8 @@
             activeRainCities.forEach(city => {
                 let div = document.createElement('div');
                 div.className = 'city-item';
-                div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">انتقال ↗</span>`;
-                    div.onclick = () => {
+                div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">تقريب ↗</span>`;
+                div.onclick = () => {
                     map.setView([city.lat, city.lon], city.zoom);
                 };
                 listEl.appendChild(div);
