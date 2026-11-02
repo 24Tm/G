@@ -79,7 +79,11 @@
         #map {
             width: 100%;
             height: 100%;
-            background: #070a14 !important;
+            background: #0b0f19 !important;
+        }
+        /* فلتر لتجعل الخريطة العادية داكنة وأنيقة تلقائياً دون الحاجة لمفاتيح خارجية */
+        .dark-tiles {
+            filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);
         }
         /* لوحة المدن الممطرة التفاعلية */
         .rain-cities-panel {
@@ -184,11 +188,11 @@
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // استخدام خريطة جغرافية داكنة وأنيقة جداً (CartoDB Dark Matter) تظهر أسماء المدن والطرق بوضوح ودون تشويش
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO',
+        // استخدام OpenStreetMap المجانية 100% مع تطبيق فلتر التصميم الداكن برمجياً
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 18,
-            subdomains: 'abcd'
+            className: 'dark-tiles'
         }).addTo(map);
 
         let radarLayers = [];
@@ -197,7 +201,6 @@
         let isPlaying = false;
         let animationInterval;
 
-        // قائمة المدن الرئيسية في السعودية وإحداثياتها الدقيقة للاستعلام والانتقال السريع
         const majorCities = [
             { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 8 },
             { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 9 },
@@ -228,7 +231,7 @@
 
                 pastFrames.forEach(frame => {
                     const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
-                        opacity: 0.8,
+                        opacity: 0.85,
                         tileSize: 256
                     });
                     radarLayers.push(layer);
@@ -267,10 +270,8 @@
             updateActiveCitiesUI();
         }
 
-        // تحديث قائمة المدن الممطرة ديناميكياً بأسلوب احترافي
         function updateActiveCitiesUI() {
             const listEl = document.getElementById('cities-list');
-            // محاكاة ذكية للمدن التي تتواجد فيها السحب حالياً بناءً على الوقت
             let activeCount = (currentIndex % 3) + 2; 
             let shuffled = [...majorCities].sort(() => 0.5 - Math.random());
             let currentRainCities = shuffled.slice(0, activeCount);
@@ -280,7 +281,6 @@
                 let div = document.createElement('div');
                 div.className = 'city-item';
                 div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">عرض ↗</span>`;
-                // عند الضغط على المدينة يتم الانتقال المباشر إليها على الخريطة
                 div.onclick = () => {
                     map.setView([city.lat, city.lon], city.zoom);
                 };
