@@ -79,7 +79,7 @@
         #map {
             width: 100%;
             height: 100%;
-            background: #0b0f19 !important;
+            background: #1a202c !important;
         }
 
         /* لوحة المدن الممطرة المدمجة */
@@ -87,7 +87,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(11, 16, 32, 0.9);
+            background: rgba(11, 16, 32, 0.95);
             backdrop-filter: blur(14px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 12px 15px;
@@ -125,7 +125,7 @@
             color: #e2e8f0;
             padding: 6px 10px;
             margin: 4px 0;
-            background: rgba(30, 41, 59, 0.6);
+            background: rgba(30, 41, 59, 0.8);
             border-radius: 8px;
             cursor: pointer;
             transition: 0.2s;
@@ -150,7 +150,7 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(11, 16, 32, 0.9);
+            background: rgba(11, 16, 32, 0.95);
             backdrop-filter: blur(14px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 10px 20px;
@@ -232,11 +232,10 @@
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // استخدام طبقة شوارع ومباني داكنة احترافية وآمنة 100% (تظهر الشوارع والأحياء بوضوح عند التقريب دون أي رسائل خطأ)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO',
-            maxZoom: 18,
-            subdomains: 'abcd'
+        // استخدام OpenStreetMap القياسية المجانية المستقرة 100% والتي تعرض الشوارع والمعالم بوضوح تام دون أي طلب مفاتيح
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
         }).addTo(map);
 
         let radarLayers = [];
@@ -275,7 +274,7 @@
 
                 pastFrames.forEach(frame => {
                     const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
-                        opacity: 0.8,
+                        opacity: 0.85,
                         tileSize: 256
                     });
                     radarLayers.push(layer);
@@ -329,7 +328,7 @@
             activeRainCities.forEach(city => {
                 let div = document.createElement('div');
                 div.className = 'city-item';
-                div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#0284c7; font-weight:bold;">انتقال ↗</span>`;
+                div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">انتقال ↗</span>`;
                 div.onclick = () => {
                     map.setView([city.lat, city.lon], city.zoom);
                 };
