@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رادار الأمطار والأقمار الصناعية الفائقة - السعودية</title>
+    <title>رادار الأمطار والأقمار الصناعية - السعودية</title>
     <!-- مكتبة Leaflet للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -80,6 +80,11 @@
             width: 100%;
             height: 100%;
             background: #0b0f19 !important;
+        }
+
+        /* إخفاء حقوق الطبع والنشر والعلامات المائية غير المرغوبة من الخريطة */
+        .leaflet-control-attribution {
+            display: none !important;
         }
 
         /* لوحة المدن الممطرة المدمجة */
@@ -225,26 +230,18 @@
     <!-- مكتبة Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // إعداد الخريطة بمركز المملكة العربية السعودية مع تفعيل أقصى درجات التقريب
+        // ضبط أقصى مستوى تقريب عند الحد الأقصى الآمن (18) لمنع ظهور مربعات الخطأ نهائياً
         const map = L.map('map', {
             zoomControl: false,
-            maxZoom: 19,
+            maxZoom: 18,
             minZoom: 4
         }).setView([23.8859, 45.0792], 6);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // استخدام طبقة صور الأقمار الصناعية العالمية الفائقة (Esri World Imagery) مع دعم التقريب العالي جداً
+        // طبقة الأقمار الصناعية الحقيقية مع قفل الحد الأقصى لمنع ظهور رسائل الخطأ
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Source: Esri, Maxar, GeoEye, Earthstar Geographics',
-            maxZoom: 19,
-            maxNativeZoom: 18
-        }).addTo(map);
-
-        // طبقة الحدود وتسميات الطرق والمنازل فوق الأقمار الصناعية بدقة واضحة
-        L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '',
-            maxZoom: 19,
+            maxZoom: 18,
             maxNativeZoom: 18
         }).addTo(map);
 
@@ -286,7 +283,7 @@
                     const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
                         opacity: 0.85,
                         tileSize: 256,
-                        maxZoom: 19
+                        maxZoom: 18
                     });
                     radarLayers.push(layer);
                     timestamps.push(new Date(frame.time * 1000));
