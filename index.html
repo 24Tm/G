@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خريطة الأقمار الصناعية - تحديد ومشاركة المواقع</title>
+    <title>خريطة الأقمار الصناعية - أقصى وضوح وتقريب فائق</title>
     <!-- مكتبة Leaflet للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -60,10 +60,6 @@
         .btn:hover {
             transform: translateY(-1px);
         }
-        .btn-success {
-            background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
         .main-container {
             position: relative;
             flex-grow: 1;
@@ -94,7 +90,7 @@
             background-color: #1e293b !important;
         }
         
-        /* تصميم نافذة الدبوس */
+        /* تصميم نافذة الدبوس الفاخرة */
         .leaflet-popup-content-wrapper, .leaflet-popup-tip {
             background: #0f172a !important;
             color: #ffffff !important;
@@ -126,7 +122,7 @@
 
     <header>
         <div style="display:flex; align-items:center; gap:8px;">
-            <h1>📍 حدد موقعك أو ضع دبوساً للمشاركة</h1>
+            <h1>🛰️ أقمار صناعية - أقصى وضوح فائق</h1>
         </div>
         <div class="controls-group">
             <button class="btn" onclick="locateMe()">📍 موقعي الحالي</button>
@@ -138,7 +134,6 @@
     </div>
 
     <!-- مكتبة Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // قراءة الإحداثيات إذا تم مشاركتها عبر الرابط
@@ -146,42 +141,38 @@
         const sharedLat = parseFloat(urlParams.get('lat'));
         const sharedLon = parseFloat(urlParams.get('lon'));
 
-        let initialCenter = [23.8859, 45.0792]; // مركز السعودية
+        let initialCenter = [23.8859, 45.0792]; // مركز السعودية الافتراضي
         let initialZoom = 6;
 
         if (!isNaN(sharedLat) && !isNaN(sharedLon)) {
             initialCenter = [sharedLat, sharedLon];
-            initialZoom = 17;
+            initialZoom = 18; // تقريب فائق جداً على الموقع المشارك
         }
 
+        // تفعيل أقصى مستوى تقريب حر (Max Zoom 19)
         const map = L.map('map', {
             zoomControl: false,
             maxZoom: 19,
-            minZoom: 4
+            minZoom: 3
         }).setView(initialCenter, initialZoom);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // طبقة الأقمار الصناعية فائقة الدقة
+        // طبقة الأقمار الصناعية الفائقة المعززة بأقصى دقة عرض
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            maxNativeZoom: 18
-        }).addTo(map);
-
-        // طبقة أسماء الشوارع والمعالم
-        L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 19,
-            maxNativeZoom: 18
+            maxNativeZoom: 18,
+            subdomains: ['server', 'services']
         }).addTo(map);
 
         let currentMarker = null;
 
-        // إذا تم فتح الرابط من شخص آخر، ضع دبوساً فورياً على الموقع المستهدف
+        // إذا تم فتح رابط مشاركة، ضع دبوساً فورياً على الموقع
         if (!isNaN(sharedLat) && !isNaN(sharedLon)) {
             setPin(sharedLat, sharedLon, "📍 الموقع المُشار إليه");
         }
 
-        // الضغط على الخريطة لوضع دبوس جديد
+        // النقر على الخريطة لوضع دبوس في أي مكان وبدقة متناهية
         map.on('click', function(e) {
             setPin(e.latlng.lat, e.latlng.lng, "📍 الموقع المحدّد");
         });
@@ -194,7 +185,7 @@
             const popupContent = `
                 <div style="text-align: center;">
                     <b>${title}</b><br>
-                    <span style="font-size: 0.75rem; color: #94a3b8;">(${lat.toFixed(4)}, ${lon.toFixed(4)})</span><br>
+                    <span style="font-size: 0.75rem; color: #94a3b8;">(${lat.toFixed(5)}, ${lon.toFixed(5)})</span><br>
                     <button class="share-popup-btn" onclick="shareSpecificLocation(${lat}, ${lon})">🔗 مشاركة هذا الموقع</button>
                 </div>
             `;
@@ -204,20 +195,20 @@
                 .openPopup();
         }
 
-        // نسخ رابط الدبوس المحدد لمشاركته
+        // وظيفة نسخ رابط الموقع المحدد لمشاركته
         window.shareSpecificLocation = function(lat, lon) {
             const shareUrl = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
             
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(shareUrl).then(() => {
-                    alert("تم نسخ رابط هذا الموقع بنجاح! 🔗\nأرسله لصديقك وسيتجه مباشرة لهذه النقطة.");
+                    alert("تم نسخ رابط الموقع بدقة فائقة! 🔗\nأرسله لصديقك وسيتجه مباشرة لهذه النقطة بدقة متناهية.");
                 });
             } else {
                 prompt("انسخ هذا الرابط وأرسله:", shareUrl);
             }
         };
 
-        // زر تحديد موقعك الحالي (GPS)
+        // تحديد موقعك الحالي بدقة عالية عبر الـ GPS
         function locateMe() {
             if (!navigator.geolocation) {
                 alert("متصفحك لا يدعم تحديد الموقع");
@@ -228,10 +219,10 @@
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 
-                map.setView([lat, lon], 17);
+                map.setView([lat, lon], 18); // تقريب فائق جداً على مكانك
                 setPin(lat, lon, "📍 أنت هنا (موقعك الحالي)");
             }, error => {
-                alert("تعذر الوصول لموقعك. تأكد من إعطاء الصلاحية للمتصفح.");
+                alert("تعذر الوصول لموقعك. تأكد من السماح للمتصفح بالصلاحية.");
             }, { enableHighAccuracy: true });
         }
     </script>
