@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رادار الأمطار والأقمار الصناعية - السعودية</title>
+    <title>خريطة الأقمار الصناعية فائقة الدقة - السعودية</title>
     <!-- مكتبة Leaflet للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -59,18 +59,6 @@
         .btn:hover {
             transform: translateY(-1px);
         }
-        .btn-secondary {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        #time-display {
-            font-size: 0.82rem;
-            color: #cbd5e1;
-            background: rgba(15, 23, 42, 0.8);
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
         .main-container {
             position: relative;
             flex-grow: 1;
@@ -82,13 +70,13 @@
             background: #0b0f19 !important;
         }
 
-        /* إخفاء حقوق الطبع والنشر والعلامات المائية غير المرغوبة من الخريطة */
+        /* إخفاء حقوق الطبع والنشر لتصبح الخريطة نظيفة تماماً */
         .leaflet-control-attribution {
             display: none !important;
         }
 
-        /* لوحة المدن الممطرة المدمجة */
-        .rain-cities-panel {
+        /* لوحة الانتقال السريع للمدن */
+        .cities-panel {
             position: absolute;
             top: 20px;
             right: 20px;
@@ -102,20 +90,17 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
         .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
             font-size: 0.85rem;
             color: #38bdf8;
             font-weight: 700;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             padding-bottom: 6px;
+            margin-bottom: 8px;
+            text-align: center;
         }
         .cities-scroll {
-            max-height: 180px;
+            max-height: 200px;
             overflow-y: auto;
-            margin-top: 8px;
             padding-right: 2px;
         }
         .cities-scroll::-webkit-scrollbar {
@@ -142,40 +127,6 @@
             background: #0ea5e9;
             color: #fff;
         }
-        .no-rain {
-            font-size: 0.78rem;
-            color: #94a3b8;
-            text-align: center;
-            padding: 8px;
-        }
-
-        /* الشريط الزمني السفلي */
-        .timeline-bar {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(11, 16, 32, 0.95);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 1000;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        .timeline-bar input[type="range"] {
-            flex-grow: 1;
-            accent-color: #0ea5e9;
-            cursor: pointer;
-            height: 5px;
-            background: #1e293b;
-            border-radius: 3px;
-        }
 
         .leaflet-control-zoom {
             border: none !important;
@@ -197,189 +148,74 @@
 
     <header>
         <div style="display:flex; align-items:center; gap:8px;">
-            <h1>🛰️ قمر صناعي فائق الدقة - السعودية</h1>
+            <h1>🛰️ خرائط الأقمار الصناعية فائقة الدقة - السعودية</h1>
         </div>
         <div class="controls-group">
-            <span id="time-display">جاري التحميل...</span>
-            <button class="btn" id="play-btn" onclick="togglePlay()">تشغيل الحركة ▶</button>
-            <button class="btn btn-secondary" onclick="loadRadarData()" title="تحديث البيانات">🔄 تحديث</button>
+            <button class="btn" onclick="resetMap()">إعادة ضبط الخريطة 🌍</button>
         </div>
     </header>
 
     <div class="main-container">
         <div id="map"></div>
         
-        <!-- لوحة المدن الممطرة المدمجة -->
-        <div class="rain-cities-panel" id="cities-panel">
-            <div class="panel-header" onclick="togglePanel()">
-                <span>📍 المدن الممطرة (<span id="rain-count">0</span>)</span>
-                <span id="toggle-icon">▼</span>
-            </div>
-            <div class="cities-scroll" id="cities-container">
-                <div class="no-rain">جاري تحميل الأقمار الصناعية...</div>
-            </div>
-        </div>
-
-        <!-- الشريط الزمني السفلي -->
-        <div class="timeline-bar">
-            <span id="slider-time" style="font-size: 0.8rem; min-width: 50px; color:#38bdf8; font-weight:600;">--:--</span>
-            <input type="range" id="time-slider" min="0" max="0" value="0" step="1" oninput="onSliderChange(this.value)">
+        <!-- لوحة المدن والمناطق -->
+        <div class="cities-panel">
+            <div class="panel-header">📍 اختر مدينة للتقريب السريع</div>
+            <div class="cities-scroll" id="cities-container"></div>
         </div>
     </div>
 
     <!-- مكتبة Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // ضبط أقصى مستوى تقريب عند الحد الأقصى الآمن (18) لمنع ظهور مربعات الخطأ نهائياً
+        // إعداد الخريطة على مركز المملكة العربية السعودية مع تفعيل التقريب الحر
         const map = L.map('map', {
             zoomControl: false,
-            maxZoom: 18,
+            maxZoom: 19,
             minZoom: 4
         }).setView([23.8859, 45.0792], 6);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // طبقة الأقمار الصناعية الحقيقية مع قفل الحد الأقصى لمنع ظهور رسائل الخطأ
+        // أقوى طبقة أقمار صناعية عالمية فائقة الدقة (بدون أي علامات مائية أو قيود مزعجة)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 18,
+            maxZoom: 19,
             maxNativeZoom: 18
         }).addTo(map);
 
-        let radarLayers = [];
-        let timestamps = [];
-        let currentIndex = 0;
-        let isPlaying = false;
-        let animationInterval;
+        // طبقة أسماء الشوارع والمعالم فوق الأقمار الصناعية
+        L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            maxNativeZoom: 18
+        }).addTo(map);
 
         const saudiLocations = [
-            { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 15 },
-            { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 15 },
-            { name: "جدة", lat: 21.5433, lon: 39.1728, zoom: 15 },
-            { name: "المدينة المنورة", lat: 24.5247, lon: 39.5692, zoom: 15 },
-            { name: "الدمام والمنطقة الشرقية", lat: 26.4207, lon: 50.0888, zoom: 15 },
-            { name: "أبها وعسير", lat: 18.2164, lon: 42.5053, zoom: 15 },
-            { name: "جازان", lat: 16.8894, lon: 42.5511, zoom: 15 },
-            { name: "الباحة", lat: 20.0129, lon: 41.4677, zoom: 15 },
-            { name: "تبوك", lat: 28.3835, lon: 36.5662, zoom: 15 },
-            { name: "حائل", lat: 27.5114, lon: 41.7208, zoom: 15 },
-            { name: "بريدة والقصيم", lat: 26.3592, lon: 43.9818, zoom: 15 },
-            { name: "نجران", lat: 17.4933, lon: 44.1277, zoom: 15 }
+            { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 16 },
+            { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 16 },
+            { name: "جدة", lat: 21.5433, lon: 39.1728, zoom: 16 },
+            { name: "المدينة المنورة", lat: 24.5247, lon: 39.5692, zoom: 16 },
+            { name: "الدمام", lat: 26.4207, lon: 50.0888, zoom: 16 },
+            { name: "أبها", lat: 18.2164, lon: 42.5053, zoom: 16 },
+            { name: "تبوك", lat: 28.3835, lon: 36.5662, zoom: 16 },
+            { name: "حائل", lat: 27.5114, lon: 41.7208, zoom: 16 },
+            { name: "بريدة", lat: 26.3592, lon: 43.9818, zoom: 16 },
+            { name: "جازان", lat: 16.8894, lon: 42.5511, zoom: 16 }
         ];
 
-        async function loadRadarData() {
-            document.getElementById('time-display').innerText = 'جاري التحديث...';
-            try {
-                const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-                const data = await response.json();
-                
-                const host = data.host;
-                const pastFrames = data.radar.past; 
+        const container = document.getElementById('cities-container');
+        saudiLocations.forEach(city => {
+            let div = document.createElement('div');
+            div.className = 'city-item';
+            div.innerHTML = `<span>🏙️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">تقريب ↗</span>`;
+            div.onclick = () => {
+                map.setView([city.lat, city.lon], city.zoom);
+            };
+            container.appendChild(div);
+        });
 
-                radarLayers.forEach(layer => map.removeLayer(layer));
-                radarLayers = [];
-                timestamps = [];
-
-                pastFrames.forEach(frame => {
-                    const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
-                        opacity: 0.85,
-                        tileSize: 256,
-                        maxZoom: 18
-                    });
-                    radarLayers.push(layer);
-                    timestamps.push(new Date(frame.time * 1000));
-                });
-
-                const slider = document.getElementById('time-slider');
-                slider.max = radarLayers.length - 1;
-
-                if (radarLayers.length > 0) {
-                    showFrame(radarLayers.length - 1);
-                }
-            } catch (error) {
-                document.getElementById('time-display').innerText = 'تعذر جلب البيانات';
-                console.error(error);
-            }
+        function resetMap() {
+            map.setView([23.8859, 45.0792], 6);
         }
-
-        function showFrame(index) {
-            index = parseInt(index);
-            radarLayers.forEach((layer, i) => {
-                if (i === index) {
-                    if (!map.hasLayer(layer)) layer.addTo(map);
-                } else {
-                    if (map.hasLayer(layer)) map.removeLayer(layer);
-                }
-            });
-
-            currentIndex = index;
-            document.getElementById('time-slider').value = index;
-
-            const timeStr = timestamps[index].toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('time-display').innerText = `التوقيت: ${timeStr}`;
-            document.getElementById('slider-time').innerText = timeStr;
-
-            updateRealRainCities();
-        }
-
-        function updateRealRainCities() {
-            const listEl = document.getElementById('cities-container');
-            const countEl = document.getElementById('rain-count');
-            
-            let activeRainCities = saudiLocations.filter((_, idx) => (idx + currentIndex) % 4 === 0);
-            if(activeRainCities.length === 0) {
-                activeRainCities = [saudiLocations[0], saudiLocations[4]];
-            }
-
-            countEl.innerText = activeRainCities.length;
-            listEl.innerHTML = '';
-
-            activeRainCities.forEach(city => {
-                let div = document.createElement('div');
-                div.className = 'city-item';
-                div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">تقريب ↗</span>`;
-                div.onclick = () => {
-                    map.setView([city.lat, city.lon], city.zoom);
-                };
-                listEl.appendChild(div);
-            });
-        }
-
-        function togglePanel() {
-            const container = document.getElementById('cities-container');
-            const icon = document.getElementById('toggle-icon');
-            if (container.style.display === 'none') {
-                container.style.display = 'block';
-                icon.innerText = '▼';
-            } else {
-                container.style.display = 'none';
-                icon.innerText = '▲';
-            }
-        }
-
-        function onSliderChange(value) {
-            if (isPlaying) togglePlay();
-            showFrame(value);
-        }
-
-        function togglePlay() {
-            const btn = document.getElementById('play-btn');
-            if (isPlaying) {
-                clearInterval(animationIdentifier);
-                btn.innerText = 'تشغيل الحركة ▶';
-                isPlaying = false;
-            } else {
-                btn.innerText = 'إيقاف ⏸';
-                isPlaying = true;
-                animationIdentifier = setInterval(() => {
-                    currentIndex = (currentIndex + 1) % radarLayers.length;
-                    showFrame(currentIndex);
-                }, 700);
-            }
-        }
-        let animationIdentifier;
-
-        loadRadarData();
-        setInterval(loadRadarData, 5 * 60 * 1000);
     </script>
 </body>
 </html>
