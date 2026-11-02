@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رادار الأمطار المباشر - السعودية</title>
+    <title>رادار الأمطار والأقمار الصناعية - السعودية</title>
     <!-- مكتبة Leaflet للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -79,7 +79,7 @@
         #map {
             width: 100%;
             height: 100%;
-            background: #1a202c !important;
+            background: #0b0f19 !important;
         }
 
         /* لوحة المدن الممطرة المدمجة */
@@ -192,7 +192,7 @@
 
     <header>
         <div style="display:flex; align-items:center; gap:8px;">
-            <h1>🌧️ رادار الأمطار - شوارع ومدن السعودية</h1>
+            <h1>🛰️ رادار الأقمار الصناعية والأمطار - السعودية</h1>
         </div>
         <div class="controls-group">
             <span id="time-display">جاري التحميل...</span>
@@ -211,7 +211,7 @@
                 <span id="toggle-icon">▼</span>
             </div>
             <div class="cities-scroll" id="cities-container">
-                <div class="no-rain">جاري تحليل الأجواء...</div>
+                <div class="no-rain">جاري تحليل صور الأقمار...</div>
             </div>
         </div>
 
@@ -232,10 +232,16 @@
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // استخدام OpenStreetMap القياسية المجانية المستقرة 100% والتي تعرض الشوارع والمعالم بوضوح تام دون أي طلب مفاتيح
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
+        // استخدام طبقة الأقمار الصناعية الحقيقية (Esri World Imagery) لتظهر المعالم والشوارع والأراضي الحقيقية من الفضاء
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Source: Esri, Maxar, GeoEye, Earthstar Geographics',
+            maxZoom: 17
+        }).addTo(map);
+
+        // طبقة إضافية لتوضيح أسماء المدن والطرق فوق الأقمار الصناعية
+        L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '',
+            maxZoom: 17
         }).addTo(map);
 
         let radarLayers = [];
@@ -329,7 +335,7 @@
                 let div = document.createElement('div');
                 div.className = 'city-item';
                 div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">انتقال ↗</span>`;
-                div.onclick = () => {
+                    div.onclick = () => {
                     map.setView([city.lat, city.lon], city.zoom);
                 };
                 listEl.appendChild(div);
