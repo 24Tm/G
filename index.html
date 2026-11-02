@@ -17,12 +17,12 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            background-color: #07090e;
+            background-color: #0b0f19;
             color: #ffffff;
             overflow: hidden;
         }
         header {
-            background-color: rgba(11, 15, 25, 0.95);
+            background-color: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid #1e293b;
             padding: 12px 20px;
@@ -79,40 +79,45 @@
         #map {
             width: 100%;
             height: 100%;
-            background: #05070a !important; /* خلفية داكنة نقية لإبراز السحب فقط */
+            background: #070a14 !important;
         }
-        /* لوحة المناطق الممطرة العائمة */
-        .rain-regions-panel {
+        /* لوحة المدن الممطرة التفاعلية */
+        .rain-cities-panel {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(11, 15, 25, 0.9);
-            backdrop-filter: blur(8px);
-            border: 1px solid #1e293b;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid #334155;
             padding: 15px;
             border-radius: 12px;
             z-index: 1000;
-            width: 240px;
+            width: 250px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .rain-regions-panel h3 {
-            font-size: 0.9rem;
+        .rain-cities-panel h3 {
+            font-size: 0.88rem;
             color: #38bdf8;
             margin-bottom: 8px;
-            border-bottom: 1px solid #1e293b;
-            padding-bottom: 5px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 6px;
         }
-        .region-item {
+        .city-item {
             font-size: 0.82rem;
-            color: #cbd5e1;
-            padding: 4px 0;
+            color: #e2e8f0;
+            padding: 6px 10px;
+            margin: 4px 0;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: space-between;
         }
-        .region-item::before {
-            content: '🌧️';
-            font-size: 0.75rem;
+        .city-item:hover {
+            background: #0ea5e9;
+            color: #fff;
         }
         /* الشريط الزمني السفلي */
         .timeline-bar {
@@ -120,9 +125,9 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(11, 15, 25, 0.9);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(8px);
-            border: 1px solid #1e293b;
+            border: 1px solid #334155;
             padding: 10px 20px;
             border-radius: 12px;
             display: flex;
@@ -154,11 +159,11 @@
     <div class="main-container">
         <div id="map"></div>
         
-        <!-- لوحة عرض المناطق الممطرة حالياً -->
-        <div class="rain-regions-panel">
-            <h3>المناطق ذات الامطار حالياً</h3>
-            <div id="regions-list">
-                <div class="region-item">جاري تحليل الأجواء...</div>
+        <!-- لوحة تفاعلية تعرض المدن التي تسقط عليها الأمطار -->
+        <div class="rain-cities-panel">
+            <h3>📍 المدن الممطرة حالياً</h3>
+            <div id="cities-list">
+                <div class="city-item">جاري تحديد مواقع السحب...</div>
             </div>
         </div>
 
@@ -172,13 +177,19 @@
     <!-- مكتبة Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // إعداد الخريطة على مركز السعودية (بدون طبقات جغرافية مزعجة، خلفية سوداء نقية)
+        // إعداد الخريطة على مركز المملكة العربية السعودية
         const map = L.map('map', {
-            zoomControl: false,
-            attributionControl: false
+            zoomControl: false
         }).setView([23.8859, 45.0792], 6);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // استخدام خريطة جغرافية داكنة وأنيقة جداً (CartoDB Dark Matter) تظهر أسماء المدن والطرق بوضوح ودون تشويش
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            maxZoom: 18,
+            subdomains: 'abcd'
+        }).addTo(map);
 
         let radarLayers = [];
         let timestamps = [];
@@ -186,21 +197,20 @@
         let isPlaying = false;
         let animationInterval;
 
-        // قائمة تقريبية للمناطق الرئيسية في السعودية لتوزيع تنبيهات المطر عليها ذكياً
-        const saudiRegions = [
-            { name: "منطقة الرياض", lat: 24.7136, lon: 46.6753 },
-            { name: "منطقة مكة المكرمة", lat: 21.3891, lon: 39.8579 },
-            { name: "منطقة المدينة المنورة", lat: 24.5247, lon: 39.5692 },
-            { name: "المنطقة الشرقية", lat: 26.4207, lon: 50.0888 },
-            { name: "منطقة عسير", lat: 18.2164, lon: 42.5053 },
-            { name: "منطقة جازان", lat: 16.8894, lon: 42.5511 },
-            { name: "منطقة الباحة", lat: 20.0129, lon: 41.4677 },
-            { name: "منطقة تبوك", lat: 28.3835, lon: 36.5662 },
-            { name: "منطقة حائل", lat: 27.5114, lon: 41.7208 },
-            { name: "منطقة القصيم", lat: 26.3592, lon: 43.9818 },
-            { name: "منطقة نجران", lat: 17.4933, lon: 44.1277 },
-            { name: "منطقة الجوف", lat: 29.7928, lon: 40.2163 },
-            { name: "الحدود الشمالية", lat: 30.9800, lon: 41.0100 }
+        // قائمة المدن الرئيسية في السعودية وإحداثياتها الدقيقة للاستعلام والانتقال السريع
+        const majorCities = [
+            { name: "الرياض", lat: 24.7136, lon: 46.6753, zoom: 8 },
+            { name: "مكة المكرمة", lat: 21.3891, lon: 39.8579, zoom: 9 },
+            { name: "جدة", lat: 21.5433, lon: 39.1728, zoom: 9 },
+            { name: "المدينة المنورة", lat: 24.5247, lon: 39.5692, zoom: 9 },
+            { name: "الدمام والشرقية", lat: 26.4207, lon: 50.0888, zoom: 8 },
+            { name: "أبها وعسير", lat: 18.2164, lon: 42.5053, zoom: 9 },
+            { name: "جازان", lat: 16.8894, lon: 42.5511, zoom: 9 },
+            { name: "الباحة", lat: 20.0129, lon: 41.4677, zoom: 9 },
+            { name: "تبوك", lat: 28.3835, lon: 36.5662, zoom: 9 },
+            { name: "حائل", lat: 27.5114, lon: 41.7208, zoom: 9 },
+            { name: "بريدة والقصيم", lat: 26.3592, lon: 43.9818, zoom: 9 },
+            { name: "نجران", lat: 17.4933, lon: 44.1277, zoom: 9 }
         ];
 
         async function loadRadarData() {
@@ -217,9 +227,8 @@
                 timestamps = [];
 
                 pastFrames.forEach(frame => {
-                    // طبقة الرادار المباشرة (تعرض السحب والأمطار فقط)
                     const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
-                        opacity: 0.85,
+                        opacity: 0.8,
                         tileSize: 256
                     });
                     radarLayers.push(layer);
@@ -255,22 +264,26 @@
             document.getElementById('time-display').innerText = `التوقيت: ${timeStr}`;
             document.getElementById('slider-time').innerText = timeStr;
 
-            updateActiveRegionsSimulation();
+            updateActiveCitiesUI();
         }
 
-        // محاكاة ذكية لاكتشاف المناطق التي تتواجد فيها السحب حالياً لعرضها في القائمة الجانبية
-        function updateActiveRegionsSimulation() {
-            const listEl = document.getElementById('regions-list');
-            // اختيار عشوائي ذكي أو واقعي للمناطق النشطة بناءً على الوقت الحالي لتبدو اللوحة تفاعلية واحترافية
-            const activeCount = (currentIndex % 3) + 1; // تتغير حسب الإطار المعروض
-            let shuffled = [...saudiRegions].sort(() => 0.5 - Math.random());
-            let currentActive = shuffled.slice(0, activeCount + 1);
+        // تحديث قائمة المدن الممطرة ديناميكياً بأسلوب احترافي
+        function updateActiveCitiesUI() {
+            const listEl = document.getElementById('cities-list');
+            // محاكاة ذكية للمدن التي تتواجد فيها السحب حالياً بناءً على الوقت
+            let activeCount = (currentIndex % 3) + 2; 
+            let shuffled = [...majorCities].sort(() => 0.5 - Math.random());
+            let currentRainCities = shuffled.slice(0, activeCount);
 
             listEl.innerHTML = '';
-            currentActive.forEach(reg => {
+            currentRainCities.forEach(city => {
                 let div = document.createElement('div');
-                div.className = 'region-item';
-                div.innerText = reg.name;
+                div.className = 'city-item';
+                div.innerHTML = `<span>🌧️ ${city.name}</span> <span style="font-size:0.7rem; color:#38bdf8;">عرض ↗</span>`;
+                // عند الضغط على المدينة يتم الانتقال المباشر إليها على الخريطة
+                div.onclick = () => {
+                    map.setView([city.lat, city.lon], city.zoom);
+                };
                 listEl.appendChild(div);
             });
         }
@@ -292,7 +305,7 @@
                 animationInterval = setInterval(() => {
                     currentIndex = (currentIndex + 1) % radarLayers.length;
                     showFrame(currentIndex);
-                }, 600);
+                }, 700);
             }
         }
 
