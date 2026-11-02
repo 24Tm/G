@@ -1,551 +1,169 @@
-تفضل، تم تحديث الكود بحيث أنه عند النقر على زر (📋 قائمة المناوبين المؤشرين)، سيظهر الجدول مقتصرًا على العدد، الاسم، والرتبة فقط، مع إخفاء باقي الأعمدة (التكليف والملاحظات وأزرار التعديل) تماماً، بينما تبقى الجداول الأخرى بالشكل الاعتيادي.
-يمكنك نسخ الكود الكامل أدناه واستبداله بالكامل:
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة وتوزيع منسوبي إدارة الشؤون الإدارية</title>
-    
+    <title>رادار الأمطار المباشر - المملكة العربية السعودية</title>
+    <!-- مكتبة Leaflet للخرائط -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            padding: 15px;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            height: 100vh;
+            background-color: #1a1a24;
+            color: #ffffff;
         }
         header {
-            background: #1e293b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            text-align: center;
-            width: 100%;
-        }
-        h1 {
-            font-size: 1.3rem;
-            color: #38bdf8;
-            margin-bottom: 12px;
-        }
-        .print-main-title {
-            display: none;
-        }
-        .controls {
+            background-color: #111118;
+            padding: 15px 20px;
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        button {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.85rem;
-            transition: 0.2s;
-        }
-        button:hover {
-            background: #1d4ed8;
-        }
-        button.secondary {
-            background: #059669;
-        }
-        button.secondary:hover {
-            background: #047857;
-        }
-        button.warning {
-            background: #d97706;
-        }
-        button.warning:hover {
-            background: #b45309;
-        }
-        button.print-btn {
-            background: #7c3aed;
-        }
-        button.print-btn:hover {
-            background: #6d28d9;
-        }
-        button.danger-btn {
-            background: #ef4444;
-        }
-        button.danger-btn:hover {
-            background: #dc2626;
-        }
-        button.edit-btn {
-            background: #d97706;
-            padding: 3px 6px;
-            font-size: 0.7rem;
-        }
-        button.edit-btn:hover {
-            background: #b45309;
-        }
-        .exclusion-box {
-            background: #1e293b; 
-            padding: 10px; 
-            border-radius: 6px; 
-            margin-bottom: 15px;
-            width: 100%;
-        }
-        #content-area {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-        }
-        .table-block {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .section-title {
-            background: #334155;
-            color: #38bdf8;
-            padding: 6px 10px;
-            font-weight: bold;
-            margin-top: 10px;
-            border-radius: 6px 6px 0 0;
-            font-size: 0.9rem;
-            border-bottom: 2px solid #2563eb;
-            text-align: right;
-        }
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #1e293b;
-            border-radius: 0 0 6px 6px;
-            overflow: hidden;
-            font-size: 0.85rem;
-        }
-        th, td {
-            padding: 6px 8px;
-            text-align: right;
-            border-bottom: 1px solid #334155;
-        }
-        th {
-            background: #1e293b;
-            color: #cbd5e1;
-        }
-        tr:hover {
-            background: #273548;
-        }
-
-        /* نافذة التعديل المنبثقة */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            justify-content: center;
-            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
-        .modal-content {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        h1 {
+            font-size: 1.2rem;
+            color: #4facfe;
         }
-        .modal-content h3 {
-            color: #38bdf8;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-        }
-        .form-group {
-            margin-bottom: 10px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-            color: #cbd5e1;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: white;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-        .modal-actions {
+        #controls {
             display: flex;
-            gap: 8px;
-            margin-top: 15px;
-            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
         }
-        
-        /* إعدادات الطباعة المخصصة */
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 4mm;
-            }
-            body {
-                background: white !important;
-                color: black !important;
-                padding: 0 !important;
-                font-size: 7pt !important;
-            }
-            header, .exclusion-box, .controls, .edit-col {
-                display: none !important;
-            }
-            .hide-on-print {
-                display: none !important;
-            }
-            .print-main-title {
-                display: block !important;
-                text-align: center;
-                font-size: 11pt;
-                font-weight: bold;
-                color: black !important;
-                margin-bottom: 4px;
-                padding-bottom: 2px;
-                border-bottom: 2px solid #000;
-            }
-            .container {
-                max-width: 100% !important;
-                margin: 0 auto !important;
-                padding: 0 !important;
-                align-items: center !important;
-            }
-            #content-area {
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                align-items: center;
-            }
-            .table-block {
-                width: 100% !important;
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-            .section-title {
-                background: #e2e8f0 !important;
-                color: black !important;
-                border-bottom: 1px solid #000;
-                padding: 2px 4px !important;
-                font-size: 7.5pt !important;
-                margin-top: 2px !important;
-            }
-            table {
-                background: white !important;
-                color: black !important;
-                border: 1px solid #bbb;
-                margin-bottom: 1px !important;
-                font-size: 7pt !important;
-            }
-            th, td {
-                padding: 1.5px 3px !important;
-                border-bottom: 1px solid #bbb !important;
-                color: black !important;
-            }
-            th {
-                background: #f1f5f9 !important;
-            }
-            .print-empty-cell {
-                color: transparent !important;
-            }
+        button {
+            background: #00f2fe;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #4facfe;
+            color: #fff;
+        }
+        #time-display {
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+        #map {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+        }
+        /* تخصيص مظهر الخريطة الداكنة */
+        .leaflet-container {
+            background: #0f172a !important;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="print-main-title">منسوبي إدارة الشؤون الإدارية - قائمة المناوبين المختارين</div>
-        
-        <header>
-            <h1>📁 نظام هيكلة وتوزيع منسوبي الإدارة</h1>
-            <div class="controls">
-                <button onclick="renderStructure('default')">الهيكلة الأصلية</button>
-                <button class="secondary" onclick="renderStructure('group2')">مجموعتان</button>
-                <button class="warning" onclick="renderStructure('group3')">3 مجموعات</button>
-                <button onclick="renderStructure('group4')">4 مجموعات</button>
-                <button class="secondary" onclick="renderStructure('activeOnly')">العاملون بالداخل</button>
-                <button class="warning" style="background: #0284c7;" onclick="renderStructure('onCallSchedule')">📋 قائمة المناوبين المؤشرين</button>
-                <button class="print-btn" onclick="window.print()">🖨 طباعة / PDF</button>
-                <button class="danger-btn" onclick="resetData()">↺ استعادة الافتراضي</button>
-            </div>
-        </header>
-
-        <div class="exclusion-box">
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">التحكم بالاستبعاد (حدد علامة صح أمام الموظفين المراد إدراجهم في قائمة المناوبين):</p>
-            <div id="exclusion-list" style="display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto;">
-                <!-- يُعبأ تلقائياً -->
-            </div>
+    <header>
+        <h1>🌧️ رادار الأمطار مباشر - السعودية</h1>
+        <div id="controls">
+            <button id="play-btn" onclick="togglePlay()">تشغيل الحركة ▶</button>
+            <span id="time-display">جاري تحميل البيانات...</span>
         </div>
+    </header>
 
-        <div id="content-area"></div>
-    </div>
+    <div id="map"></div>
 
-    <!-- نافذة تعديل موظف -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <h3>تعديل بيانات المنسوب</h3>
-            <input type="hidden" id="editId">
-            <div class="form-group">
-                <label>الاسم:</label>
-                <input type="text" id="editName">
-            </div>
-            <div class="form-group">
-                <label>الرتبة:</label>
-                <input type="text" id="editRank">
-            </div>
-            <div class="form-group">
-                <label>التكليف / الوظيفة:</label>
-                <input type="text" id="editRole">
-            </div>
-            <div class="form-group">
-                <label>الملاحظات / القسم:</label>
-                <input type="text" id="editNotes">
-            </div>
-            <div class="modal-actions">
-                <button onclick="closeModal()" style="background: #475569;">إلغاء</button>
-                <button onclick="saveStaffChanges()" class="secondary">حفظ التعديل</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- مكتبة Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const defaultStaffData = [
-            { id: 1, name: "عبدالرحمن عبدالله الشمراني", rank: "رئيس رقباء", role: "رقيب الإدارة", category: "رقيب الإدارة", notes: "رقيب الادارة" },
-            { id: 2, name: "عبدالرحمن سعود البواردي", rank: "رقيب اول", role: "مساعد الرقيب", category: "رقيب الإدارة", notes: "مساعد" },
-            { id: 3, name: "عبدالرحمن خالد الحمود", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط" },
-            { id: 4, name: "أحمد بداي العتيبي", rank: "وكيل رقيب", role: "مدخل بيانات", category: "شؤون الضباط", notes: "مهام الضباط+مراسل" },
-            { id: 5, name: "خالد عويمر المطيري", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "الترقيات" },
-            { id: 6, name: "طلال ناصر العتيبي", rank: "رقيب اول", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
-            { id: 7, name: "محمد عواد المطيري", rank: "رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
-            { id: 8, name: "خالد شبيب الشيباني", rank: "رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
-            { id: 9, name: "نهار شعير الحربي", rank: "رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
-            { id: 10, name: "تركي سلطان العتيبي", rank: "وكيل رقيب", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
-            { id: 11, name: "فهد محسن العتيبي", rank: "عريف", role: "مدخل بيانات", category: "شؤون الأفراد", notes: "مهام أفراد" },
-            { id: 12, name: "حمود عوض الله المطيري", rank: "رقيب", role: "ارشيف", category: "الارشيف والمراسلات", notes: "ارشيف" },
-            { id: 13, name: "محمد خويتم المطيري", rank: "وكيل رقيب", role: "ارشيف", category: "الارشيف والمراسلات", notes: "ارشيف" },
-            { id: 14, name: "تركي مشعل العتيبي", rank: "رقيب", role: "مراسل", category: "الارشيف والمراسلات", notes: "مراسل" },
-            { id: 15, name: "عبدالله احمد القحطاني", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 16, name: "عادي ظافر العتيبي", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 17, name: "نواف هادي العتيبي", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 18, name: "محمد ناصر العتيبي", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 19, name: "حسن ضاحي الدوسري", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 20, name: "ظافر سعد الدوسري", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 21, name: "ماجد فيحان الحربي", rank: "رئيس رقباء", role: "مناوب", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 22, name: "بندر محمد المجعد", rank: "رئيس رقباء", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 23, name: "عبدالله علي العتيبي", rank: "رقيب", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 24, name: "ماهر الحميدي المطيري", rank: "رقيب", role: "مكتب القايد", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" },
-            { id: 25, name: "ثامر حمود العتيبي", rank: "عريف", role: "خدمات", category: "شؤون الأفراد", notes: "خدمات" },
-            { id: 26, name: "عبدالله سحمان السبيعي", rank: "رئيس رقباء", role: "راحة", category: "لا يقومون بأي اعمال داخل الادارة", notes: "لا يعمل داخل الادارة" }
-        ];
+        // إعداد الخريطة لمركز المملكة العربية السعودية
+        const map = L.map('map').setView([23.8859, 45.0792], 6);
 
-        let staffData = JSON.parse(localStorage.getItem('staffData')) || JSON.parse(JSON.stringify(defaultStaffData));
-        let currentMode = 'default';
+        // إضافة الخريطة الأساسية (تعديل الألوان لتكون داكنة وأنيقة)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            maxZoom: 18
+        }).addTo(map);
 
-        function saveToLocalStorage() {
-            localStorage.setItem('staffData', JSON.stringify(staffData));
-        }
+        let radarLayers = [];
+        let timestamps = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let animationInterval;
 
-        function resetData() {
-            if (confirm("هل أنت متأكد من استعادة البيانات الافتراضية وحذف التعديلات؟")) {
-                localStorage.removeItem('staffData');
-                staffData = JSON.parse(JSON.stringify(defaultStaffData));
-                initExclusionCheckboxes();
-                renderStructure(currentMode);
-            }
-        }
-
-        function initExclusionCheckboxes() {
-            const listDiv = document.getElementById('exclusion-list');
-            listDiv.innerHTML = '';
-            staffData.forEach(p => {
-                let isChecked = !p.notes.includes("لا يعمل") && p.category !== "لا يقومون بأي اعمال داخل الادارة";
-                if(p.id === 25) isChecked = true; 
-
-                listDiv.innerHTML += `
-                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer;">
-                        <input type="checkbox" id="chk_${p.id}" value="${p.id}" ${isChecked ? 'checked' : ''} onchange="renderStructure(currentMode)"> ${p.name.split(' ')[0]} ${p.name.split(' ')[1]}
-                    </label>
-                `;
-            });
-        }
-
-        function getActiveStaff() {
-            return staffData.filter(p => {
-                const chk = document.getElementById(`chk_${p.id}`);
-                return chk && chk.checked;
-            });
-        }
-
-        function renderStructure(type) {
-            currentMode = type;
-            const container = document.getElementById('content-area');
-            container.innerHTML = '';
-            const activeStaff = getActiveStaff();
-
-            if (type === 'default') {
-                const groups = {};
-                activeStaff.forEach(person => {
-                    let cat = person.category;
-                    if (!groups[cat]) groups[cat] = [];
-                    groups[cat].push(person);
-                });
-                for (let cat in groups) {
-                    container.innerHTML += createTableHTML(cat, groups[cat], false);
-                }
-            } else if (type === 'activeOnly') {
-                const filtered = activeStaff.filter(p => p.category !== "لا يقومون بأي اعمال داخل الادارة" && !p.notes.includes("لا يعمل"));
-                container.innerHTML += createTableHTML("العاملون داخل الإدارة فقط", filtered, false);
-            } else if (type === 'onCallSchedule') {
-                // جدول المناوبين المؤشرين (العدد، الاسم، الرتبة فقط)
-                container.innerHTML += createTableHTML("قائمة المناوبين المؤشرين", activeStaff, true);
-            } else if (type === 'group2' || type === 'group3' || type === 'group4') {
-                let numGroups = type === 'group2' ? 2 : (type === 'group3' ? 3 : 4);
+        // جلب بيانات الرادار المباشرة من RainViewer API
+        async function loadRadarData() {
+            try {
+                const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+                const data = await response.json();
                 
-                const roleGroups = {};
-                activeStaff.forEach(person => {
-                    let key = person.role;
-                    if (!roleGroups[key]) roleGroups[key] = [];
-                    roleGroups[key].push(person);
-                });
+                const host = data.host;
+                const pastFrames = data.radar.past; // الإطارات المسجلة لآخر ساعتين
 
-                let groupsArray = Array.from({ length: numGroups }, () => []);
-                
-                for (let role in roleGroups) {
-                    let members = roleGroups[role];
-                    members.forEach(member => {
-                        groupsArray.sort((a, b) => a.length - b.length);
-                        groupsArray[0].push(member);
+                // مسح الطبقات القديمة
+                radarLayers.forEach(layer => map.removeLayer(layer));
+                radarLayers = [];
+                timestamps = [];
+
+                // إنشاء طبقة لكل إطار زمن
+                pastFrames.forEach(frame => {
+                    const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+                        opacity: 0.65,
+                        tileSize: 256
                     });
-                }
-
-                groupsArray.forEach((groupMembers, index) => {
-                    container.innerHTML += createTableHTML(`المجموعة (${index + 1}) - (الإجمالي: ${groupMembers.length})`, groupMembers, false);
+                    radarLayers.push(layer);
+                    timestamps.push(new Date(frame.time * 1000));
                 });
+
+                if (radarLayers.length > 0) {
+                    showFrame(radarLayers.length - 1); // عرض الإطار الأخير (الأحدث)
+                }
+            } catch (error) {
+                document.getElementById('time-display').innerText = 'حدث خطأ في تحميل البيانات';
+                console.error(error);
             }
         }
 
-        function createTableHTML(title, list, isCompactSchedule) {
-            let rows = '';
-            list.forEach((p, index) => {
-                if (isCompactSchedule) {
-                    rows += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${p.name}</td>
-                            <td>${p.rank}</td>
-                        </tr>
-                    `;
+        // عرض إطار معين بناءً على التوقيت
+        function showFrame(index) {
+            radarLayers.forEach((layer, i) => {
+                if (i === index) {
+                    if (!map.hasLayer(layer)) layer.addTo(map);
                 } else {
-                    rows += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${p.name}</td>
-                            <td>${p.rank}</td>
-                            <td class="print-empty-cell">${p.role}</td>
-                            <td class="print-empty-cell">${p.notes}</td>
-                            <td class="edit-col"><button class="edit-btn" onclick="openEditModal(${p.id})">✏ تعديل</button></td>
-                        </tr>
-                    `;
+                    if (map.hasLayer(layer)) map.removeLayer(layer);
                 }
             });
 
-            if (list.length === 0) {
-                let colSpan = isCompactSchedule ? 3 : 6;
-                rows = `<tr><td colspan="${colSpan}" style="text-align: center; color: #94a3b8;">لا يوجد عناصر في هذه القائمة</td></tr>`;
+            currentIndex = index;
+            const timeStr = timestamps[index].toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('time-display').innerText = `التوقيت: ${timeStr}`;
+        }
+
+        // التحكم في تشغيل وإيقاف حركة الرادار
+        function togglePlay() {
+            const btn = document.getElementById('play-btn');
+            if (isPlaying) {
+                clearInterval(animationInterval);
+                btn.innerText = 'تشغيل الحركة ▶';
+                isPlaying = false;
+            } else {
+                btn.innerText = 'إيقاف ⏸';
+                isPlaying = true;
+                animationInterval = setInterval(() => {
+                    let nextIndex = (currentIndex + 1) % radarLayers.length;
+                    showFrame(nextIndex);
+                }, 700); // تغيير الإطار كل 0.7 ثانية
             }
-
-            const isInactiveGroup = title.includes("لا يقومون بأي اعمال") && !isCompactSchedule;
-            const blockClass = isInactiveGroup ? "table-block hide-on-print" : "table-block";
-
-            let headers = isCompactSchedule ? `
-                <tr>
-                    <th style="width: 50px;">العدد</th>
-                    <th>الاسم</th>
-                    <th>الرتبة</th>
-                </tr>
-            ` : `
-                <tr>
-                    <th>#</th>
-                    <th>الاسم</th>
-                    <th>الرتبة</th>
-                    <th>التكليف</th>
-                    <th>الملاحظات</th>
-                    <th class="edit-col" style="width: 70px;">إجراء</th>
-                </tr>
-            `;
-
-            return `
-                <div class="${blockClass}">
-                    <div class="section-title">${title}</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                ${headers}
-                            </thead>
-                            <tbody>
-                                ${rows}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
         }
 
-        function openEditModal(id) {
-            const person = staffData.find(p => p.id === id);
-            if (!person) return;
-            document.getElementById('editId').value = person.id;
-            document.getElementById('editName').value = person.name;
-            document.getElementById('editRank').value = person.rank;
-            document.getElementById('editRole').value = person.role;
-            document.getElementById('editNotes').value = person.notes;
-            document.getElementById('editModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-
-        function saveStaffChanges() {
-            const id = parseInt(document.getElementById('editId').value);
-            const person = staffData.find(p => p.id === id);
-            if (person) {
-                person.name = document.getElementById('editName').value;
-                person.rank = document.getElementById('editRank').value;
-                person.role = document.getElementById('editRole').value;
-                person.notes = document.getElementById('editNotes').value;
-                
-                saveToLocalStorage();
-            }
-            closeModal();
-            initExclusionCheckboxes();
-            renderStructure(currentMode);
-        }
-
-        window.onload = () => {
-            initExclusionCheckboxes();
-            renderStructure('default');
-        };
+        // تحميل البيانات أول مرة وتحديثها كل 5 دقائق تلقائياً
+        loadRadarData();
+        setInterval(loadRadarData, 5 * 60 * 1000);
     </script>
 </body>
 </html>
-
