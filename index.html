@@ -183,14 +183,12 @@
             zoomControl: false
         }).setView([23.8859, 45.0792], 6);
 
-        // إضافة أزرار التحكم بالتقريب في الزاوية اليمنى السفلى أو اليسرى
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // خريطة أساسية داكنة وأنيقة لا تحتاج مفتاح API
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO',
-            maxZoom: 18,
-            subdomains: 'abcd'
+        // استخدام طبقة OpenStreetMap الرسمية المجانية بالكامل والتي لا تتطلب أي مفاتيح API
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 18
         }).addTo(map);
 
         let radarLayers = [];
@@ -198,7 +196,7 @@
         let currentIndex = 0;
         let isPlaying = false;
         let animationInterval;
-        let animationSpeed = 700; // السرعة الافتراضية
+        let animationSpeed = 700;
 
         // جلب بيانات الرادار الفعلية من RainViewer API
         async function loadRadarData() {
@@ -210,13 +208,11 @@
                 const host = data.host;
                 const pastFrames = data.radar.past; 
 
-                // إزالة الطبقات القديمة لمنع التداخل
                 radarLayers.forEach(layer => map.removeLayer(layer));
                 radarLayers = [];
                 timestamps = [];
 
                 pastFrames.forEach(frame => {
-                    // استخدام الألوان الغنية للرادار (الخيار 2 مع تدرج الطقس)
                     const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
                         opacity: 0.75,
                         tileSize: 256
@@ -237,7 +233,6 @@
             }
         }
 
-        // عرض إطار زمني محدد
         function showFrame(index) {
             index = parseInt(index);
             radarLayers.forEach((layer, i) => {
@@ -256,13 +251,11 @@
             document.getElementById('slider-time').innerText = timeStr;
         }
 
-        // تفاعل شريط التمرير اليدوي
         function onSliderChange(value) {
-            if (isPlaying) togglePlay(); // إيقاف التشغيل التلقائي عند التحريك اليدوي
+            if (isPlaying) togglePlay();
             showFrame(value);
         }
 
-        // تشغيل وإيقاف الحركة التلقائية للسحب
         function togglePlay() {
             const btn = document.getElementById('play-btn');
             if (isPlaying) {
@@ -274,21 +267,24 @@
                 isPlaying = true;
                 animationInterval = setInterval(() => {
                     currentIndex = (currentIndex + 1) % radarLayers.length;
-                    showFrame(currentIndex);
+                    showFileAndFrame(currentIndex);
                 }, animationSpeed);
             }
         }
 
-        // تبديل سرعة العرض
+        function showFileAndFrame(idx) {
+            showFrame(idx);
+        }
+
         let speedState = 1;
         function changeSpeed() {
             const btnSpeedText = event.target;
             if (speedState === 1) {
-                animationSpeed = 350; // سريع جداً
+                animationSpeed = 350;
                 btnSpeedText.innerText = 'السرعة: سريع 🚀';
                 speedState = 2;
             } else {
-                animationSpeed = 700; // عادي
+                animationSpeed = 700;
                 btnSpeedText.innerText = 'السرعة: عادي ⚡';
                 speedState = 1;
             }
@@ -301,7 +297,6 @@
             }
         }
 
-        // التشغيل الأولي وتحديث البيانات تلقائياً كل 5 دقائق
         loadRadarData();
         setInterval(loadRadarData, 5 * 60 * 1000);
     </script>
